@@ -1,5 +1,6 @@
 package com.example.streamtobluetoothplayer
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -68,8 +69,9 @@ class MainActivity : ComponentActivity() {
     private fun connected() {
         spotifyAppRemote?.let {
             // Play a playlist
-            val playlistURI = "spotify:playlist:37i9dQZF1DX2sUQwD7tbmL"
-            it.playerApi.play(playlistURI)
+            //val playlistURI = "spotify:playlist:37i9dQZF1DX2sUQwD7tbmL"
+            // val likedSongsURI = "spotify:user:$id:collection"
+            // it.playerApi.play(playlistURI)
             // Subscribe to PlayerState
             it.playerApi.subscribeToPlayerState().setEventCallback {
                 val track: Track = it.track
@@ -77,6 +79,9 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val intent = Intent(this, SpotifyAuthActivity::class.java)
+
+        startActivity(intent)
     }
 
     override fun onStop() {

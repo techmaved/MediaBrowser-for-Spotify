@@ -13,6 +13,11 @@
         android:theme="@style/Theme.StreamToBluetoothPlayer"
         tools:targetApi="31">
         <activity
+            android:name=".SpotifyAuthActivity"
+            android:exported="false"
+            android:label="@string/title_activity_spotify_auth"
+            android:theme="@style/Theme.StreamToBluetoothPlayer" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
