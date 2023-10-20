@@ -21,15 +21,18 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.protocol.client.Subscription;
 import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
+import com.spotify.sdk.android.auth.LoginActivity
 
 class MainActivity : ComponentActivity() {
 
     private val clientId = ""
     private val redirectUri = "http://localhost:8888/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
+    private var token = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        token = intent.getStringExtra("token").toString()
         setContent {
             StreamToBluetoothPlayerTheme {
                 // A surface container using the 'background' color from the theme
@@ -73,15 +76,14 @@ class MainActivity : ComponentActivity() {
             // val likedSongsURI = "spotify:user:$id:collection"
             // it.playerApi.play(playlistURI)
             // Subscribe to PlayerState
-            it.playerApi.subscribeToPlayerState().setEventCallback {
-                val track: Track = it.track
-                Log.d("MainActivity", track.name + " by " + track.artist.name)
+            if (token != null) {
+                it.playerApi.subscribeToPlayerState().setEventCallback {
+                    val track: Track = it.track
+                    Log.d("MainActivity", track.name + " by " + track.artist.name)
+                }
             }
+
         }
-
-        val intent = Intent(this, SpotifyAuthActivity::class.java)
-
-        startActivity(intent)
     }
 
     override fun onStop() {

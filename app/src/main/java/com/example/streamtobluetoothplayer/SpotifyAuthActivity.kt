@@ -20,8 +20,10 @@ class SpotifyAuthActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        moveTaskToBack(true)
+
         val builder =
-            AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI)
+            AuthorizationRequest.Builder(clientId, AuthorizationResponse.Type.TOKEN, redirectUri)
 
         builder.setScopes(arrayOf("streaming"))
         val request = builder.build()
@@ -37,11 +39,13 @@ class SpotifyAuthActivity : ComponentActivity() {
             val response = AuthorizationClient.getResponse(resultCode, intent)
             when (response.type) {
                 AuthorizationResponse.Type.TOKEN -> {
-                    Log.d("SpotifyAuthActivity", response.accessToken)
+                    val intent = Intent(this, MainActivity::class.java)
+                    intent.putExtra("token", response.accessToken)
+                    startActivity(intent)
                 }
                 AuthorizationResponse.Type.ERROR -> {}
                 else -> {
-                    Log.d("SpotifyAuthActivity", response.toString())
+
                 }
             }
         }
