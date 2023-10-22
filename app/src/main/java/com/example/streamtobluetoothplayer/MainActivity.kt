@@ -82,21 +82,18 @@ class MainActivity : ComponentActivity() {
             // it.playerApi.play(playlistURI)
             // Subscribe to PlayerState
 
-            if (token != null) {
-                spotifyService?.mySavedTracks?.enqueue(object : Callback<Pager<SavedTrack>> {
-                    override fun onResponse(
-                        call: Call<Pager<SavedTrack>>,
-                        response: Response<Pager<SavedTrack>>
-                    ) {
-                        Log.d("response", response.body()?.items.toString())
-                    }
+            spotifyService?.mySavedTracks?.enqueue(object : Callback<Pager<SavedTrack>> {
+                override fun onResponse(
+                    call: Call<Pager<SavedTrack>>,
+                    response: Response<Pager<SavedTrack>>
+                ) {
+                    Log.d("response", response.body()?.items.toString())
+                }
 
-                    override fun onFailure(call: Call<Pager<SavedTrack>>, t: Throwable) {
-                        TODO("Not yet implemented")
-                    }
-
-                })
-            }
+                override fun onFailure(call: Call<Pager<SavedTrack>>, t: Throwable) {
+                    TODO("Not yet implemented")
+                }
+            })
 
             it.playerApi.subscribeToPlayerState().setEventCallback {
                 val track: Track = it.track
