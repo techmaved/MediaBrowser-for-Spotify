@@ -8,6 +8,7 @@ android {
     compileSdk = 33
 
     defaultConfig {
+        manifestPlaceholders += mapOf()
         applicationId = "com.example.streamtobluetoothplayer"
         minSdk = 24
         targetSdk = 33
@@ -29,6 +30,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+
+        create("customDebugType") {
+            isDebuggable = true
         }
     }
     compileOptions {
@@ -63,12 +68,15 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation(files("../libs/spotify-app-remote-release-0.8.0.aar"))
     implementation(files("../libs/spotify-auth-release-2.1.0.aar"))
+    implementation("com.github.pghazal.spotify-web-api-android:api-retrofit2:1.0.2")
     implementation("com.google.code.gson:gson:2.8.6")
+    implementation(platform("androidx.compose:compose-bom:2023.03.00"))
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.03.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation(platform("androidx.compose:compose-bom:2023.03.00"))
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }
