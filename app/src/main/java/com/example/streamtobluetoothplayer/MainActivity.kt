@@ -1,6 +1,5 @@
 package com.example.streamtobluetoothplayer
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -13,15 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.streamtobluetoothplayer.ui.theme.StreamToBluetoothPlayerTheme
+import com.spotify.android.appremote.api.ConnectionParams
+import com.spotify.android.appremote.api.Connector
+import com.spotify.android.appremote.api.SpotifyAppRemote
+import com.spotify.protocol.types.Track
+import io.github.kaaes.spotify.webapi.core.models.Pager
+import io.github.kaaes.spotify.webapi.core.models.SavedTrack
+import io.github.kaaes.spotify.webapi.retrofit.v2.Spotify
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
-
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.PlayerState;
-import com.spotify.protocol.types.Track;
-import com.spotify.sdk.android.auth.LoginActivity
 
 class MainActivity : ComponentActivity() {
 
@@ -72,11 +73,32 @@ class MainActivity : ComponentActivity() {
     private fun connected() {
         spotifyAppRemote?.let {
             // Play a playlist
-            //val playlistURI = "spotify:playlist:37i9dQZF1DX2sUQwD7tbmL"
+            // val playlistURI = "spotify:playlist:37i9dQZF1DX2sUQwD7tbmL"
             // val likedSongsURI = "spotify:user:$id:collection"
             // it.playerApi.play(playlistURI)
             // Subscribe to PlayerState
+
             if (token != null) {
+
+                val spotifyService = Spotify.createAuthenticatedService(token)
+
+                val call = spotifyService.mySavedTracks
+
+                call.enqueue(object: Callback<Pager<SavedTrack>> {
+                    override fun onResponse(
+                        call: Call<Pager<SavedTrack>>,
+                        response: Response<Pager<SavedTrack>>
+                    ) {
+                        Log.d("response", response.body()?.items.toString())
+                    }
+
+                    override fun onFailure(call: Call<Pager<SavedTrack>>, t: Throwable) {
+                        TODO("Not yet implemented")
+                    }
+
+                })
+
+
                 it.playerApi.subscribeToPlayerState().setEventCallback {
                     val track: Track = it.track
                     Log.d("MainActivity", track.name + " by " + track.artist.name)

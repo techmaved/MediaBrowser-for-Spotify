@@ -2,10 +2,7 @@ package com.example.streamtobluetoothplayer
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
-import com.spotify.sdk.android.auth.AccountsQueryParameters.CLIENT_ID
-import com.spotify.sdk.android.auth.AccountsQueryParameters.REDIRECT_URI
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -25,7 +22,11 @@ class SpotifyAuthActivity : ComponentActivity() {
         val builder =
             AuthorizationRequest.Builder(clientId, AuthorizationResponse.Type.TOKEN, redirectUri)
 
-        builder.setScopes(arrayOf("streaming"))
+        builder.setScopes(
+            arrayOf(
+                "user-library-read",
+                "streaming"
+            ))
         val request = builder.build()
 
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request)
