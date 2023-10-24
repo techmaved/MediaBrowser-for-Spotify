@@ -2,6 +2,7 @@ package com.example.streamtobluetoothplayer
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
@@ -46,7 +47,7 @@ class SpotifyAuthActivity : ComponentActivity() {
                 }
                 AuthorizationResponse.Type.ERROR -> {}
                 else -> {
-
+                    Log.d("error", "error")
                 }
             }
         }
