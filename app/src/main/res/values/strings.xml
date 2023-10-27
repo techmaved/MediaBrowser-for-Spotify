@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">Stream to Bluetooth Player</string>
     <string name="title_activity_spotify_auth">SpotifyAuthActivity</string>
+    <string name="title_activity_player">PlayerActivity</string>
 </resources>
