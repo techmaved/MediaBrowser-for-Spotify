@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /> <!-- For targetSdk 34+ -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
@@ -20,15 +21,17 @@
             android:exported="false"
             android:label="@string/title_activity_player"
             android:theme="@style/Theme.StreamToBluetoothPlayer" />
+
         <service
             android:name=".PlaybackService"
-            android:foregroundServiceType="mediaPlayback"
-            android:exported="true">
+            android:exported="true"
+            android:foregroundServiceType="mediaPlayback">
             <intent-filter>
-                <action android:name="androidx.media3.session.MediaSessionService"/>
-                <action android:name="android.media.browse.MediaBrowserService"/>
+                <action android:name="androidx.media3.session.MediaSessionService" />
+                <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
         <activity
             android:name=".SpotifyAuthActivity"
             android:exported="true"
@@ -44,7 +47,7 @@
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.StreamToBluetoothPlayer"></activity>
+            android:theme="@style/Theme.StreamToBluetoothPlayer" />
     </application>
 
 </manifest>
