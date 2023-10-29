@@ -216,6 +216,27 @@ class PlaybackService : MediaLibraryService() {
                 .setSessionActivity(getSingleTopActivity())
                 .setBitmapLoader(CacheBitmapLoader(DataSourceBitmapLoader(/* context= */ this)))
                 .build()
+
+        hookIntoPlayer()
+    }
+
+    @SuppressLint("UnsafeOptInUsageError")
+    private fun hookIntoPlayer() {
+        player.addListener(object : Player.Listener {
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                player.stop()
+
+                if (Player.STATE_IDLE !== playbackState) {
+                    val currentMediaItem = player.currentMediaItem
+                    spotifyAppRemote?.let {
+                        if (currentMediaItem?.localConfiguration?.uri != null) {
+                            it.playerApi.play(currentMediaItem.localConfiguration?.uri.toString())
+                        }
+                    }
+
+                }
+            }
+        })
     }
 
 
