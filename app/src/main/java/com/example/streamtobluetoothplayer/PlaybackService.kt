@@ -11,10 +11,12 @@ import android.app.TaskStackBuilder
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.exoplayer.ExoPlayer
@@ -31,6 +33,7 @@ import com.google.common.util.concurrent.ListenableFuture
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
+    private val service = SpotifyWebApiService
 
     private lateinit var player: ExoPlayer
     private lateinit var mediaLibrarySession: MediaLibrarySession
@@ -179,7 +182,7 @@ class PlaybackService : MediaLibraryService() {
             ExoPlayer.Builder(this)
                 .setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
                 .build()
-        MediaItemTree.initialize(assets)
+        MediaItemTree.initialize()
 
         mediaLibrarySession =
             MediaLibrarySession.Builder(this, player, librarySessionCallback)

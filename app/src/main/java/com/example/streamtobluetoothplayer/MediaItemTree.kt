@@ -15,14 +15,12 @@
  */
 package com.example.streamtobluetoothplayer
 
-import android.content.res.AssetManager
 import android.net.Uri
-import android.util.Log
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import com.google.common.collect.ImmutableList
-import java.io.BufferedReader
+import io.github.kaaes.spotify.webapi.core.models.SavedTrack
 import org.json.JSONObject
 
 /**
@@ -37,9 +35,10 @@ import org.json.JSONObject
 object MediaItemTree {
   private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
   private var titleMap: MutableMap<String, MediaItemNode> = mutableMapOf()
+  private val spotifyWebApi = SpotifyWebApiService
   private var isInitialized = false
   private const val ROOT_ID = "[rootID]"
-  private const val ALBUM_ID = "[albumID]"
+  private const val LIKED_SONG_ID = "[albumID]"
   private const val GENRE_ID = "[genreID]"
   private const val ARTIST_ID = "[artistID]"
   private const val ALBUM_PREFIX = "[album]"
@@ -92,10 +91,7 @@ object MediaItemTree {
       .build()
   }
 
-  private fun loadJSONFromAsset(assets: AssetManager): String =
-    assets.open("catalog.json").bufferedReader().use(BufferedReader::readText)
-
-  fun initialize(assets: AssetManager) {
+  fun initialize() {
     if (isInitialized) return
     isInitialized = true
     // create root and folders for album/artist/genre.
@@ -109,78 +105,43 @@ object MediaItemTree {
           mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_MIXED
         )
       )
-    treeNodes[ALBUM_ID] =
+    treeNodes[LIKED_SONG_ID] =
       MediaItemNode(
         buildMediaItem(
-          title = "Album Folder",
-          mediaId = ALBUM_ID,
+          title = "Liked songs",
+          mediaId = LIKED_SONG_ID,
           isPlayable = false,
           isBrowsable = true,
-          mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS
+          mediaType = MediaMetadata.MEDIA_TYPE_MUSIC
         )
       )
-    treeNodes[ARTIST_ID] =
-      MediaItemNode(
-        buildMediaItem(
-          title = "Artist Folder",
-          mediaId = ARTIST_ID,
-          isPlayable = false,
-          isBrowsable = true,
-          mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_ARTISTS
-        )
-      )
-    treeNodes[GENRE_ID] =
-      MediaItemNode(
-        buildMediaItem(
-          title = "Genre Folder",
-          mediaId = GENRE_ID,
-          isPlayable = false,
-          isBrowsable = true,
-          mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_GENRES
-        )
-      )
-    treeNodes[ROOT_ID]!!.addChild(ALBUM_ID)
-    treeNodes[ROOT_ID]!!.addChild(ARTIST_ID)
-    treeNodes[ROOT_ID]!!.addChild(GENRE_ID)
 
-    // Here, parse the json file in asset for media list.
-    // We use a file in asset for demo purpose
-    val jsonObject = JSONObject(loadJSONFromAsset(assets))
-    val mediaList = jsonObject.getJSONArray("media")
+    treeNodes[ROOT_ID]!!.addChild(LIKED_SONG_ID)
 
-    // create subfolder with same artist, album, etc.
-    for (i in 0 until mediaList.length()) {
-      addNodeToTree(mediaList.getJSONObject(i))
+    // spotify music obj array list
+    //for (i in 0 until mediaList.length()) {
+    //  addNodeToTree(mediaList.getJSONObject(i))
+    //}
+
+    spotifyWebApi.getLikedTracks {
+      it?.items?.iterator()?.forEach {
+        addNodeToTree(it)
+      }
     }
   }
 
-  private fun addNodeToTree(mediaObject: JSONObject) {
+  private fun addNodeToTree(mediaItem: SavedTrack) {
 
-    val id = mediaObject.getString("id")
-    val album = mediaObject.getString("album")
-    val title = mediaObject.getString("title")
-    val artist = mediaObject.getString("artist")
-    val genre = mediaObject.getString("genre")
-    val subtitleConfigurations: MutableList<SubtitleConfiguration> = mutableListOf()
-    if (mediaObject.has("subtitles")) {
-      val subtitlesJson = mediaObject.getJSONArray("subtitles")
-      for (i in 0 until subtitlesJson.length()) {
-        val subtitleObject = subtitlesJson.getJSONObject(i)
-        subtitleConfigurations.add(
-          SubtitleConfiguration.Builder(Uri.parse(subtitleObject.getString("subtitle_uri")))
-            .setMimeType(subtitleObject.getString("subtitle_mime_type"))
-            .setLanguage(subtitleObject.getString("subtitle_lang"))
-            .build()
-        )
-      }
-    }
-    val sourceUri = Uri.parse(mediaObject.getString("source"))
-    val imageUri = Uri.parse(mediaObject.getString("image"))
+    val id = mediaItem.track.id
+    val album = mediaItem.track.album.name
+    val title = mediaItem.track.name
+    val artist = mediaItem.track.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+    val genre = ""
+    val sourceUri = Uri.parse(mediaItem.track.uri)
+    val imageUri = Uri.parse("")
     // key of such items in tree
     val idInTree = ITEM_PREFIX + id
-    val albumFolderIdInTree = ALBUM_PREFIX + album
-    val artistFolderIdInTree = ARTIST_PREFIX + artist
-    val genreFolderIdInTree = GENRE_PREFIX + genre
+    val songIdInTree = LIKED_SONG_ID + id
 
     treeNodes[idInTree] =
       MediaItemNode(
@@ -190,7 +151,6 @@ object MediaItemTree {
           isPlayable = true,
           isBrowsable = false,
           mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
-          subtitleConfigurations,
           album = album,
           artist = artist,
           genre = genre,
@@ -201,55 +161,20 @@ object MediaItemTree {
 
     titleMap[title.lowercase()] = treeNodes[idInTree]!!
 
-    if (!treeNodes.containsKey(albumFolderIdInTree)) {
-      treeNodes[albumFolderIdInTree] =
+    if (!treeNodes.containsKey(songIdInTree)) {
+      treeNodes[songIdInTree] =
         MediaItemNode(
           buildMediaItem(
             title = album,
-            mediaId = albumFolderIdInTree,
+            mediaId = songIdInTree,
             isPlayable = true,
             isBrowsable = true,
-            mediaType = MediaMetadata.MEDIA_TYPE_ALBUM,
-            subtitleConfigurations
+            mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
           )
         )
-      treeNodes[ALBUM_ID]!!.addChild(albumFolderIdInTree)
+      treeNodes[LIKED_SONG_ID]!!.addChild(songIdInTree)
     }
-    treeNodes[albumFolderIdInTree]!!.addChild(idInTree)
-
-    // add into artist folder
-    if (!treeNodes.containsKey(artistFolderIdInTree)) {
-      treeNodes[artistFolderIdInTree] =
-        MediaItemNode(
-          buildMediaItem(
-            title = artist,
-            mediaId = artistFolderIdInTree,
-            isPlayable = true,
-            isBrowsable = true,
-            mediaType = MediaMetadata.MEDIA_TYPE_ARTIST,
-            subtitleConfigurations
-          )
-        )
-      treeNodes[ARTIST_ID]!!.addChild(artistFolderIdInTree)
-    }
-    treeNodes[artistFolderIdInTree]!!.addChild(idInTree)
-
-    // add into genre folder
-    if (!treeNodes.containsKey(genreFolderIdInTree)) {
-      treeNodes[genreFolderIdInTree] =
-        MediaItemNode(
-          buildMediaItem(
-            title = genre,
-            mediaId = genreFolderIdInTree,
-            isPlayable = true,
-            isBrowsable = true,
-            mediaType = MediaMetadata.MEDIA_TYPE_GENRE,
-            subtitleConfigurations
-          )
-        )
-      treeNodes[GENRE_ID]!!.addChild(genreFolderIdInTree)
-    }
-    treeNodes[genreFolderIdInTree]!!.addChild(idInTree)
+    treeNodes[songIdInTree]!!.addChild(idInTree)
   }
 
   fun getItem(id: String): MediaItem? {
