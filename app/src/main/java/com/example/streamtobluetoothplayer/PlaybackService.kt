@@ -30,10 +30,15 @@ import androidx.media3.session.SessionResult
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import com.spotify.android.appremote.api.ConnectionParams
+import com.spotify.android.appremote.api.Connector
+import com.spotify.android.appremote.api.SpotifyAppRemote
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
-    private val service = SpotifyWebApiService
+    private val clientId = ""
+    private val redirectUri = "http://localhost:8888/callback"
+    private var spotifyAppRemote: SpotifyAppRemote? = null
 
     private lateinit var player: ExoPlayer
     private lateinit var mediaLibrarySession: MediaLibrarySession
@@ -53,6 +58,25 @@ class PlaybackService : MediaLibraryService() {
         super.onCreate()
         initializeSessionAndPlayer()
         setListener(MediaSessionServiceListener())
+        connectToSpotifyAppRemote()
+    }
+
+    private fun connectToSpotifyAppRemote() {
+        val connectionParams = ConnectionParams.Builder(clientId)
+            .setRedirectUri(redirectUri)
+            .showAuthView(true)
+            .build()
+
+        SpotifyAppRemote.connect(this, connectionParams, object : Connector.ConnectionListener {
+            override fun onConnected(appRemote: SpotifyAppRemote) {
+                spotifyAppRemote = appRemote
+                Log.d("MainActivity", "Connected! Yay!")
+            }
+
+            override fun onFailure(throwable: Throwable) {
+                Log.e("MainActivity", throwable.message, throwable)
+            }
+        })
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession {
@@ -70,6 +94,9 @@ class PlaybackService : MediaLibraryService() {
         mediaLibrarySession.setSessionActivity(getBackStackedActivity())
         mediaLibrarySession.release()
         player.release()
+        spotifyAppRemote?.let {
+            SpotifyAppRemote.disconnect(it)
+        }
         clearListener()
         super.onDestroy()
     }
