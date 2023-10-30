@@ -21,7 +21,6 @@ import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import com.google.common.collect.ImmutableList
 import io.github.kaaes.spotify.webapi.core.models.SavedTrack
-import org.json.JSONObject
 
 /**
  * A sample media catalog that represents media items as a tree.
@@ -131,7 +130,6 @@ object MediaItemTree {
   }
 
   private fun addNodeToTree(mediaItem: SavedTrack) {
-
     val id = mediaItem.track.id
     val album = mediaItem.track.album.name
     val title = mediaItem.track.name
@@ -160,21 +158,7 @@ object MediaItemTree {
       )
 
     titleMap[title.lowercase()] = treeNodes[idInTree]!!
-
-    if (!treeNodes.containsKey(songIdInTree)) {
-      treeNodes[songIdInTree] =
-        MediaItemNode(
-          buildMediaItem(
-            title = album,
-            mediaId = songIdInTree,
-            isPlayable = true,
-            isBrowsable = true,
-            mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
-          )
-        )
-      treeNodes[LIKED_SONG_ID]!!.addChild(songIdInTree)
-    }
-    treeNodes[songIdInTree]!!.addChild(idInTree)
+    treeNodes[LIKED_SONG_ID]!!.addChild(idInTree)
   }
 
   fun getItem(id: String): MediaItem? {
