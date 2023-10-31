@@ -20,7 +20,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import com.google.common.collect.ImmutableList
-import io.github.kaaes.spotify.webapi.core.models.SavedTrack
+import io.github.kaaes.spotify.webapi.core.models.TrackSimple
 
 /**
  * A sample media catalog that represents media items as a tree.
@@ -44,12 +44,19 @@ object MediaItemTree {
   private const val GENRE_PREFIX = "[genre]"
   private const val ARTIST_PREFIX = "[artist]"
   private const val ITEM_PREFIX = "[item]"
+  private const val PLAYLIST_ID = "[playlistId]"
 
   private class MediaItemNode(val item: MediaItem) {
     private val children: MutableList<MediaItem> = ArrayList()
 
     fun addChild(childID: String) {
       this.children.add(treeNodes[childID]!!.item)
+    }
+
+    fun addChildren(childrenIDs: Array<String>) {
+      childrenIDs.forEach {childId ->
+        this.children.add(treeNodes[childId]!!.item)
+      }
     }
 
     fun getChildren(): List<MediaItem> {
@@ -115,31 +122,90 @@ object MediaItemTree {
         )
       )
 
-    treeNodes[ROOT_ID]!!.addChild(LIKED_SONG_ID)
+    treeNodes[PLAYLIST_ID] = MediaItemNode(
+      buildMediaItem(
+        title = "Playlists",
+        mediaId = PLAYLIST_ID,
+        isPlayable = false,
+        isBrowsable = true,
+        mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS
+      )
+    )
+
+    treeNodes[ALBUM_PREFIX] = MediaItemNode(
+      buildMediaItem(
+        title = "Album",
+        mediaId = ALBUM_PREFIX,
+        isPlayable = false,
+        isBrowsable = true,
+        mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS
+      )
+    )
+
+    treeNodes[ROOT_ID]!!.addChildren(arrayOf(LIKED_SONG_ID, PLAYLIST_ID, ALBUM_PREFIX))
 
     // spotify music obj array list
     //for (i in 0 until mediaList.length()) {
     //  addNodeToTree(mediaList.getJSONObject(i))
     //}
 
-    spotifyWebApi.getLikedTracks {
+    spotifyWebApi.getLikedTracks { it ->
       it?.items?.iterator()?.forEach {
-        addNodeToTree(it)
+        addNodeToTree(it.track, LIKED_SONG_ID)
+      }
+    }
+
+    spotifyWebApi.getPlaylists {playlists ->
+      playlists?.items?.iterator()?.forEach {playlist ->
+        addBrowsableToTree(playlist.name, playlist.id, PLAYLIST_ID)
+        spotifyWebApi.getPlaylistTracks(playlist.id) {playlistTracks ->
+          playlistTracks?.items?.iterator()?.forEach {track ->
+            // get node and it of it
+            addNodeToTree(track.track, PLAYLIST_ID + playlist.id)
+          }
+        }
+      }
+    }
+
+    spotifyWebApi.getSavedAlbums {savedAlbumPager ->
+      savedAlbumPager?.items?.iterator()?.forEach {savedAlbum  ->
+        addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_PREFIX)
+
+        savedAlbum.album.tracks.items.iterator().forEach {track ->
+          addNodeToTree(track, ALBUM_PREFIX + savedAlbum.album.id)
+        }
       }
     }
   }
 
-  private fun addNodeToTree(mediaItem: SavedTrack) {
-    val id = mediaItem.track.id
-    val album = mediaItem.track.album.name
-    val title = mediaItem.track.name
-    val artist = mediaItem.track.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+  private fun addBrowsableToTree(name: String, id: String, parentId: String) {
+    // key of such items in tree
+    val idInTree = parentId + id
+
+    treeNodes[idInTree] =
+      MediaItemNode(
+        buildMediaItem(
+          title = name,
+          mediaId = idInTree,
+          isPlayable = false,
+          isBrowsable = true,
+          mediaType = MediaMetadata.MEDIA_TYPE_PLAYLIST
+        )
+      )
+
+    titleMap[name.lowercase()] = treeNodes[idInTree]!!
+    treeNodes[parentId]!!.addChild(idInTree)
+  }
+
+  private fun addNodeToTree(mediaItem: TrackSimple, parentId: String) {
+    val id = mediaItem.id
+    val title = mediaItem.name
+    val artist = mediaItem.artists.joinToString(", ") { artistSimple -> artistSimple.name }
     val genre = ""
-    val sourceUri = Uri.parse(mediaItem.track.uri)
+    val sourceUri = Uri.parse(mediaItem.uri)
     val imageUri = Uri.parse("")
     // key of such items in tree
     val idInTree = ITEM_PREFIX + id
-    val songIdInTree = LIKED_SONG_ID + id
 
     treeNodes[idInTree] =
       MediaItemNode(
@@ -149,7 +215,7 @@ object MediaItemTree {
           isPlayable = true,
           isBrowsable = false,
           mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
-          album = album,
+          album = null,
           artist = artist,
           genre = genre,
           sourceUri = sourceUri,
@@ -158,7 +224,7 @@ object MediaItemTree {
       )
 
     titleMap[title.lowercase()] = treeNodes[idInTree]!!
-    treeNodes[LIKED_SONG_ID]!!.addChild(idInTree)
+    treeNodes[parentId]!!.addChild(idInTree)
   }
 
   fun getItem(id: String): MediaItem? {
