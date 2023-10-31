@@ -26,7 +26,8 @@ class SpotifyAuthActivity : ComponentActivity() {
         builder.setScopes(
             arrayOf(
                 "user-library-read",
-                "streaming"
+                "streaming",
+                "playlist-read-private",
             ))
         val request = builder.build()
 
