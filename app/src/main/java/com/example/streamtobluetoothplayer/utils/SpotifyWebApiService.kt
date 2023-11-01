@@ -1,14 +1,10 @@
-package com.example.streamtobluetoothplayer
+package com.example.streamtobluetoothplayer.utils
 
-import android.os.IBinder
-import io.github.kaaes.spotify.webapi.core.models.CursorPager
 import io.github.kaaes.spotify.webapi.core.models.Pager
 import io.github.kaaes.spotify.webapi.core.models.PlaylistSimple
 import io.github.kaaes.spotify.webapi.core.models.PlaylistTrack
-import io.github.kaaes.spotify.webapi.core.models.RecentlyPlayedTrack
 import io.github.kaaes.spotify.webapi.core.models.SavedTrack
 import io.github.kaaes.spotify.webapi.core.models.UserPrivate
-import io.github.kaaes.spotify.webapi.core.Options
 import io.github.kaaes.spotify.webapi.core.models.SavedAlbum
 import io.github.kaaes.spotify.webapi.retrofit.v2.Spotify
 import io.github.kaaes.spotify.webapi.retrofit.v2.SpotifyService

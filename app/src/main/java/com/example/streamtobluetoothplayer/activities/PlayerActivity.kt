@@ -1,4 +1,4 @@
-package com.example.streamtobluetoothplayer
+package com.example.streamtobluetoothplayer.activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

@@ -1,9 +1,10 @@
-package com.example.streamtobluetoothplayer
+package com.example.streamtobluetoothplayer.activities
 
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import com.example.streamtobluetoothplayer.utils.SpotifyWebApiService
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
