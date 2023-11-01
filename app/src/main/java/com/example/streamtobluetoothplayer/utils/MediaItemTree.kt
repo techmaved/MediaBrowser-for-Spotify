@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.streamtobluetoothplayer
+package com.example.streamtobluetoothplayer.utils
 
 import android.net.Uri
 import androidx.media3.common.MediaItem
@@ -149,33 +149,33 @@ object MediaItemTree {
     //  addNodeToTree(mediaList.getJSONObject(i))
     //}
 
-    spotifyWebApi.getLikedTracks { it ->
-      it?.items?.iterator()?.forEach {
-        addNodeToTree(it.track, LIKED_SONG_ID)
-      }
-    }
-
-    spotifyWebApi.getPlaylists {playlists ->
-      playlists?.items?.iterator()?.forEach {playlist ->
-        addBrowsableToTree(playlist.name, playlist.id, PLAYLIST_ID)
-        spotifyWebApi.getPlaylistTracks(playlist.id) {playlistTracks ->
-          playlistTracks?.items?.iterator()?.forEach {track ->
-            // get node and it of it
-            addNodeToTree(track.track, PLAYLIST_ID + playlist.id)
+      SpotifyWebApiService.getLikedTracks { it ->
+          it?.items?.iterator()?.forEach {
+              addNodeToTree(it.track, LIKED_SONG_ID)
           }
-        }
       }
-    }
 
-    spotifyWebApi.getSavedAlbums {savedAlbumPager ->
-      savedAlbumPager?.items?.iterator()?.forEach {savedAlbum  ->
-        addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_PREFIX)
-
-        savedAlbum.album.tracks.items.iterator().forEach {track ->
-          addNodeToTree(track, ALBUM_PREFIX + savedAlbum.album.id)
-        }
+      SpotifyWebApiService.getPlaylists { playlists ->
+          playlists?.items?.iterator()?.forEach { playlist ->
+              addBrowsableToTree(playlist.name, playlist.id, PLAYLIST_ID)
+              SpotifyWebApiService.getPlaylistTracks(playlist.id) { playlistTracks ->
+                  playlistTracks?.items?.iterator()?.forEach { track ->
+                      // get node and it of it
+                      addNodeToTree(track.track, PLAYLIST_ID + playlist.id)
+                  }
+              }
+          }
       }
-    }
+
+      SpotifyWebApiService.getSavedAlbums { savedAlbumPager ->
+          savedAlbumPager?.items?.iterator()?.forEach { savedAlbum ->
+              addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_PREFIX)
+
+              savedAlbum.album.tracks.items.iterator().forEach { track ->
+                  addNodeToTree(track, ALBUM_PREFIX + savedAlbum.album.id)
+              }
+          }
+      }
   }
 
   private fun addBrowsableToTree(name: String, id: String, parentId: String) {

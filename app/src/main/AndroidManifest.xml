@@ -17,13 +17,13 @@
         android:theme="@style/Theme.StreamToBluetoothPlayer"
         tools:targetApi="31">
         <activity
-            android:name=".PlayerActivity"
+            android:name=".activities.PlayerActivity"
             android:exported="false"
             android:label="@string/title_activity_player"
             android:theme="@style/Theme.StreamToBluetoothPlayer" />
 
         <service
-            android:name=".PlaybackService"
+            android:name=".utils.PlaybackService"
             android:exported="true"
             android:foregroundServiceType="mediaPlayback">
             <intent-filter>
@@ -33,7 +33,7 @@
         </service>
 
         <activity
-            android:name=".SpotifyAuthActivity"
+            android:name=".activities.SpotifyAuthActivity"
             android:exported="true"
             android:label="@string/title_activity_spotify_auth"
             android:theme="@style/Theme.StreamToBluetoothPlayer">
@@ -44,7 +44,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".activities.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.StreamToBluetoothPlayer" />
