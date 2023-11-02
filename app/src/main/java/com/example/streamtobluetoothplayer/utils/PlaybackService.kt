@@ -27,6 +27,9 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
+import com.adamratzman.spotify.SpotifyClientApi
+import com.adamratzman.spotify.models.ContextUri
+import com.adamratzman.spotify.models.PlayableUri
 import com.example.streamtobluetoothplayer.activities.MainActivity
 import com.example.streamtobluetoothplayer.activities.PlayerActivity
 import com.google.common.collect.ImmutableList
@@ -230,12 +233,12 @@ class PlaybackService : MediaLibraryService() {
 
                 if (Player.STATE_IDLE !== playbackState) {
                     val currentMediaItem = player.currentMediaItem
-                    spotifyAppRemote?.let {
-                        if (currentMediaItem?.localConfiguration?.uri != null) {
-                            it.playerApi.play(currentMediaItem.localConfiguration?.uri.toString())
-                        }
-                    }
+                    val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
+                    val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 
+                    guardValidSpotifyApi { api: SpotifyClientApi ->
+                        api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
+                    }
                 }
             }
         })
