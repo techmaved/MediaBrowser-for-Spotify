@@ -159,9 +159,12 @@ object MediaItemTree {
     }
 
     private fun populateMediaTree() {
-        SpotifyWebApiService.getLikedTracks { it ->
-            it?.items?.iterator()?.forEach {
-                addNodeToTree(it.track, LIKED_SONG_ID)
+        val username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
+
+        // TODO: some code changes this into random playlist uri that contains song
+        SpotifyWebApiService.getLikedTracks { savedTracks ->
+            savedTracks?.items?.iterator()?.forEach {
+                addNodeToTree(it.track, LIKED_SONG_ID, "spotify:user:$username:collection")
             }
         }
 
@@ -170,7 +173,7 @@ object MediaItemTree {
                 addBrowsableToTree(playlist.name, playlist.id, PLAYLIST_ID)
                 SpotifyWebApiService.getPlaylistTracks(playlist.id) { playlistTracks ->
                     playlistTracks?.items?.iterator()?.forEach { track ->
-                        addNodeToTree(track.track, PLAYLIST_ID + playlist.id)
+                        addNodeToTree(track.track, PLAYLIST_ID + playlist.id, playlist.uri)
                     }
                 }
             }
@@ -181,7 +184,7 @@ object MediaItemTree {
                 addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_ID)
 
                 savedAlbum.album.tracks.items.iterator().forEach { track ->
-                    addNodeToTree(track, ALBUM_ID + savedAlbum.album.id)
+                    addNodeToTree(track, ALBUM_ID + savedAlbum.album.id, savedAlbum.album.uri)
                 }
             }
         }
@@ -198,7 +201,7 @@ object MediaItemTree {
             }
 
             episodes?.items?.forEach { episode: SimpleEpisode ->
-                addEpisodeNodeToTree(episode, SHOW_ID + savedShow.show.id)
+                addEpisodeNodeToTree(episode, SHOW_ID + savedShow.show.id, savedShow.show.uri.uri)
             }
         }
     }
@@ -221,13 +224,13 @@ object MediaItemTree {
         treeNodes[parentId]!!.addChild(idInTree)
     }
 
-    private fun addNodeToTree(mediaItem: TrackSimple, parentId: String) {
+    private fun addNodeToTree(mediaItem: TrackSimple, parentId: String, contextUri: String) {
         val id = mediaItem.id
         val title = mediaItem.name
         val artist = mediaItem.artists.joinToString(", ") { artistSimple -> artistSimple.name }
         val genre = ""
         val sourceUri = Uri.parse(mediaItem.uri)
-        val imageUri = Uri.parse("")
+        val imageUri = Uri.parse(contextUri)
         val idInTree = ITEM_PREFIX + id
 
         treeNodes[idInTree] =
@@ -250,13 +253,13 @@ object MediaItemTree {
         treeNodes[parentId]!!.addChild(idInTree)
     }
 
-    private fun addEpisodeNodeToTree(episode: SimpleEpisode, parentId: String) {
+    private fun addEpisodeNodeToTree(episode: SimpleEpisode, parentId: String, contextUri: String) {
         val id = episode.id
         val title = episode.name
         val artist = ""
         val genre = ""
         val sourceUri = Uri.parse(episode.uri.uri)
-        val imageUri = Uri.parse("")
+        val imageUri = Uri.parse(contextUri)
         val idInTree = ITEM_PREFIX + id
 
         treeNodes[idInTree] =
