@@ -46,7 +46,6 @@ class SpotifyAuthActivity : ComponentActivity() {
                     //val intent = Intent(this, MainActivity::class.java)
                     //intent.putExtra("token", response.accessToken)
                     //startActivity(intent)
-                    SpotifyWebApiService.initialize(response.accessToken)
                 }
                 AuthorizationResponse.Type.ERROR -> {}
                 else -> {

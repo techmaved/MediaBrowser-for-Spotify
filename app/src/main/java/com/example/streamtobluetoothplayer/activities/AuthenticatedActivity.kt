@@ -10,15 +10,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.adamratzman.spotify.auth.pkce.startSpotifyClientPkceLoginActivity
-import com.example.streamtobluetoothplayer.auth.SpotifyPkceLoginActivityImpl
+import com.example.streamtobluetoothplayer.utils.guardValidSpotifyApi
 import com.example.streamtobluetoothplayer.ui.theme.StreamToBluetoothPlayerTheme
-import com.example.streamtobluetoothplayer.models.Model
-import com.example.streamtobluetoothplayer.auth.pkceClassBackTo
 
-class MainActivity : ComponentActivity() {
-    lateinit var model: Model
-
+class AuthenticatedActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -28,19 +23,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting("Android")
+                    Greeting2("Android")
                 }
             }
         }
-
-        pkceClassBackTo = AuthenticatedActivity::class.java // from the previous code sample, return to an activity after auth success
-        startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
     }
-
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun Greeting2(name: String, modifier: Modifier = Modifier) {
     Text(
         text = "Hello $name!",
         modifier = modifier
@@ -49,8 +40,8 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 
 @Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
+fun GreetingPreview2() {
     StreamToBluetoothPlayerTheme {
-        Greeting("Android")
+        Greeting2("Android")
     }
 }
