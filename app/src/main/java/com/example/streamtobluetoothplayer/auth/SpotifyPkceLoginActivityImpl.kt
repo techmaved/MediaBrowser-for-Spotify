@@ -15,6 +15,7 @@ class SpotifyPkceLoginActivityImpl : AbstractSpotifyPkceLoginActivity() {
     override val clientId = ""
     override val redirectUri = "streamtobluetoothplayer://auth"
     override val scopes = SpotifyScope.values().toList()
+
     override fun onSuccess(api: SpotifyClientApi) {
         val model = (application as SpotifyAuth).model
         model.credentialStore.setSpotifyApi(api)

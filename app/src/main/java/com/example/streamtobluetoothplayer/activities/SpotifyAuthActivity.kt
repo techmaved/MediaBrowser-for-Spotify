@@ -29,7 +29,8 @@ class SpotifyAuthActivity : ComponentActivity() {
                 "user-library-read",
                 "streaming",
                 "playlist-read-private",
-            ))
+            )
+        )
         val request = builder.build()
 
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request)
@@ -47,6 +48,7 @@ class SpotifyAuthActivity : ComponentActivity() {
                     //intent.putExtra("token", response.accessToken)
                     //startActivity(intent)
                 }
+
                 AuthorizationResponse.Type.ERROR -> {}
                 else -> {
                     Log.d("error", "error")

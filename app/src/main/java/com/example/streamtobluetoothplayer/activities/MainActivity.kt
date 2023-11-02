@@ -17,8 +17,6 @@ import com.example.streamtobluetoothplayer.models.Model
 import com.example.streamtobluetoothplayer.auth.pkceClassBackTo
 
 class MainActivity : ComponentActivity() {
-    lateinit var model: Model
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -33,7 +31,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        pkceClassBackTo = AuthenticatedActivity::class.java // from the previous code sample, return to an activity after auth success
+        pkceClassBackTo = AuthenticatedActivity::class.java
         startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
     }
 
