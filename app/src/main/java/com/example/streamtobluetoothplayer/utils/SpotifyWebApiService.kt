@@ -31,10 +31,10 @@ object SpotifyWebApiService {
                 response: Response<Pager<SavedTrack>>
             ) {
                 if (!response.isSuccessful) {
-                    callback(null) // Notify the caller that an error occurred.
+                    callback(null)
                 }
 
-                callback(response.body()) // Return the result to the caller.
+                callback(response.body())
             }
 
             override fun onFailure(call: Call<Pager<SavedTrack>>, t: Throwable) {
@@ -79,22 +79,23 @@ object SpotifyWebApiService {
         })
 
 
-        spotifyService?.getPlaylistTracks(userId, playlistId)?.enqueue(object: Callback<Pager<PlaylistTrack>> {
-            override fun onResponse(
-                call: Call<Pager<PlaylistTrack>>,
-                response: Response<Pager<PlaylistTrack>>
-            ) {
-                if (!response.isSuccessful) {
-                    callback(null)
+        spotifyService?.getPlaylistTracks(userId, playlistId)
+            ?.enqueue(object : Callback<Pager<PlaylistTrack>> {
+                override fun onResponse(
+                    call: Call<Pager<PlaylistTrack>>,
+                    response: Response<Pager<PlaylistTrack>>
+                ) {
+                    if (!response.isSuccessful) {
+                        callback(null)
+                    }
+
+                    callback(response.body())
                 }
 
-                callback(response.body())
-            }
-
-            override fun onFailure(call: Call<Pager<PlaylistTrack>>, t: Throwable) {
-                callback(null)
-            }
-        })
+                override fun onFailure(call: Call<Pager<PlaylistTrack>>, t: Throwable) {
+                    callback(null)
+                }
+            })
     }
 
     fun getSavedAlbums(callback: (Pager<SavedAlbum>?) -> Unit) {
@@ -104,10 +105,10 @@ object SpotifyWebApiService {
                 response: Response<Pager<SavedAlbum>>
             ) {
                 if (!response.isSuccessful) {
-                    callback(null) // Notify the caller that an error occurred.
+                    callback(null)
                 }
 
-                callback(response.body()) // Return the result to the caller.
+                callback(response.body())
             }
 
             override fun onFailure(call: Call<Pager<SavedAlbum>>, t: Throwable) {
