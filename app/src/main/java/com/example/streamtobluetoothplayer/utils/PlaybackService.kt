@@ -230,10 +230,14 @@ class PlaybackService : MediaLibraryService() {
         player.addListener(object : Player.Listener {
             @Deprecated("Deprecated in Java")
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                val currentMediaItem = player.currentMediaItem
                 player.stop()
 
+                if (currentMediaItem?.mediaId?.contains(MediaItemTree.LOAD_MORE_ID) == true) {
+                    MediaItemTree.loadMoreSongs(currentMediaItem.mediaId)
+                }
+
                 if (Player.STATE_IDLE !== playbackState) {
-                    val currentMediaItem = player.currentMediaItem
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
                     val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 

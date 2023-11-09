@@ -1,6 +1,7 @@
 package com.example.streamtobluetoothplayer.utils
 
 import com.adamratzman.spotify.SpotifyClientApi
+import io.github.kaaes.spotify.webapi.core.Options
 import io.github.kaaes.spotify.webapi.core.models.Pager
 import io.github.kaaes.spotify.webapi.core.models.PlaylistSimple
 import io.github.kaaes.spotify.webapi.core.models.PlaylistTrack
@@ -12,6 +13,7 @@ import io.github.kaaes.spotify.webapi.retrofit.v2.SpotifyService
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.Objects
 
 object SpotifyWebApiService {
     private var spotifyService: SpotifyService? = null
@@ -24,8 +26,13 @@ object SpotifyWebApiService {
         spotifyService = Spotify.createAuthenticatedService(token)
     }
 
-    fun getLikedTracks(callback: (Pager<SavedTrack>?) -> Unit) {
-        spotifyService?.mySavedTracks?.enqueue(object : Callback<Pager<SavedTrack>> {
+    fun getLikedTracks(limit: Int = 20, offset: Int = 0, callback: (Pager<SavedTrack>?) -> Unit) {
+        var options = mutableMapOf<String, Any>()
+        options[Options.LIMIT] = limit
+        options[Options.OFFSET] = offset
+
+
+        spotifyService?.getMySavedTracks(options)?.enqueue(object : Callback<Pager<SavedTrack>> {
             override fun onResponse(
                 call: Call<Pager<SavedTrack>>,
                 response: Response<Pager<SavedTrack>>
