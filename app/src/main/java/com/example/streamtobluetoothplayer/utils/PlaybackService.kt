@@ -38,10 +38,11 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
+import com.example.streamtobluetoothplayer.Credentials
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
-    private val clientId = ""
+    private val clientId = Credentials.CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
 

@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import com.example.streamtobluetoothplayer.utils.SpotifyWebApiService
+import com.example.streamtobluetoothplayer.Credentials
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
@@ -12,7 +12,7 @@ import com.spotify.sdk.android.auth.LoginActivity.REQUEST_CODE
 
 
 class SpotifyAuthActivity : ComponentActivity() {
-    private val clientId = ""
+    private val clientId = Credentials.CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"
 
 
