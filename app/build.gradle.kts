@@ -5,17 +5,18 @@ plugins {
 
 android {
     namespace = "com.example.streamtobluetoothplayer"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
-        manifestPlaceholders += mapOf()
+        manifestPlaceholders += mapOf(
+            "redirectSchemeName" to "spotify-sdk",
+            "redirectHostName" to "auth"
+        )
         applicationId = "com.example.streamtobluetoothplayer"
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-        manifestPlaceholders["redirectSchemeName"] = "spotify-sdk"
-        manifestPlaceholders["redirectHostName"] = "auth"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -47,7 +48,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.2"
     }
     packaging {
         resources {
