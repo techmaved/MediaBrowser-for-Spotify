@@ -229,6 +229,7 @@ class PlaybackService : MediaLibraryService() {
     @SuppressLint("UnsafeOptInUsageError")
     private fun hookIntoPlayer() {
         player.addListener(object : Player.Listener {
+            @Deprecated("Deprecated in Java")
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 player.stop()
 

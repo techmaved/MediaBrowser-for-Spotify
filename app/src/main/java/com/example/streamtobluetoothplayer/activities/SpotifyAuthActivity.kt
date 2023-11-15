@@ -36,6 +36,7 @@ class SpotifyAuthActivity : ComponentActivity() {
         AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request)
     }
 
+    @Deprecated("Deprecated in Java")
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
 
