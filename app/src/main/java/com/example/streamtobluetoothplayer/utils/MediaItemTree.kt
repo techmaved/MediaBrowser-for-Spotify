@@ -173,7 +173,9 @@ object MediaItemTree {
                 addBrowsableToTree(playlist.name, playlist.id, PLAYLIST_ID)
                 SpotifyWebApiService.getPlaylistTracks(playlist.id) { playlistTracks ->
                     playlistTracks?.items?.iterator()?.forEach { track ->
-                        addNodeToTree(track.track, PLAYLIST_ID + playlist.id, playlist.uri)
+                        if (track.track !== null) {
+                            addNodeToTree(track.track, PLAYLIST_ID + playlist.id, playlist.uri)
+                        }
                     }
                 }
             }
