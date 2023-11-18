@@ -215,7 +215,6 @@ class PlaybackService : MediaLibraryService() {
             ExoPlayer.Builder(this)
                 .setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
                 .build()
-        MediaItemTree.initialize()
 
         mediaLibrarySession =
             MediaLibrarySession.Builder(this, player, librarySessionCallback)
