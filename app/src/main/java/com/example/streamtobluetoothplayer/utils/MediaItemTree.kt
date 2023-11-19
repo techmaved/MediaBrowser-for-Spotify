@@ -20,11 +20,17 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
 import com.adamratzman.spotify.SpotifyClientApi
+import com.adamratzman.spotify.models.PlaylistTrack
+import com.adamratzman.spotify.models.SavedAlbum
+import com.adamratzman.spotify.models.SavedShow
 import com.adamratzman.spotify.models.SimpleEpisode
+import com.adamratzman.spotify.models.SimplePlaylist
+import com.adamratzman.spotify.models.SimpleTrack
+import com.adamratzman.spotify.models.Track
 import com.google.common.collect.ImmutableList
-import io.github.kaaes.spotify.webapi.core.models.TrackSimple
-import okhttp3.internal.notify
-import java.util.UUID
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /**
  * A sample media catalog that represents media items as a tree.
@@ -47,6 +53,7 @@ object MediaItemTree {
     private const val SHOW_ID = "[showId]"
     private var nextOptions: MutableMap<String, Uri> = mutableMapOf()
     private var username: String? = ""
+    private val spotifyWebApiService = SpotifyWebApiService()
     const val LOAD_MORE_ID = "[loadMoreId]"
 
     private class MediaItemNode(val item: MediaItem) {
@@ -190,70 +197,49 @@ object MediaItemTree {
     private fun populateMediaTree() {
         username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
 
+        /*
         // TODO: some code changes this into random playlist uri that contains song
-        SpotifyWebApiService.getLikedTracks { savedTracks ->
-            savedTracks?.items?.iterator()?.forEach {
-                addNodeToTree(it.track, LIKED_SONG_ID, "spotify:user:$username:collection")
-            }
+        spotifyWebApiService.getAllSavedTracks().forEach { track: SavedTrack ->
+            addNodeToTree(track.track, LIKED_SONG_ID, "spotify:user:$username:collection")
+        }
+        */
 
-            if (savedTracks?.next != null) {
-                loadMoreItem(LIKED_SONG_ID, Uri.parse(savedTracks.next))
+        spotifyWebApiService.getPlaylists(username)?.forEach { simplePlaylist: SimplePlaylist ->
+            addBrowsableToTree(simplePlaylist.name, simplePlaylist.id, PLAYLIST_ID)
+
+            spotifyWebApiService.getPlaylistTracks(simplePlaylist.id).forEach { playlistTrack: PlaylistTrack ->
+                playlistTrack.track?.asTrack?.let {
+                    addNodeToTree(
+                        it,
+                        PLAYLIST_ID + simplePlaylist.id,
+                        simplePlaylist.uri.uri
+                    )
+                }
             }
         }
 
-        SpotifyWebApiService.getPlaylists { playlists ->
-            playlists?.items?.iterator()?.forEach { playlist ->
-                addBrowsableToTree(playlist.name, playlist.id, PLAYLIST_ID)
-                SpotifyWebApiService.getPlaylistTracks(playlist.id) { playlistTracks ->
-                    playlistTracks?.items?.iterator()?.forEach { track ->
-                        if (track.track !== null) {
-                            addNodeToTree(track.track, PLAYLIST_ID + playlist.id, playlist.uri)
+        spotifyWebApiService.getSavedAlbums().forEach { savedAlbum: SavedAlbum ->
+            addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_ID)
+
+            spotifyWebApiService.getAlbumTracks(savedAlbum.album.id).forEach { simpleTrack: SimpleTrack ->
+                CoroutineScope(Dispatchers.IO).launch {
+                    simpleTrack.toFullTrack().let {
+                        if (it != null) {
+                            addNodeToTree(
+                                it,
+                                ALBUM_ID + savedAlbum.album.id, savedAlbum.album.uri.uri)
                         }
                     }
                 }
             }
-
-            if (playlists?.next != null) {
-                loadMoreItem(PLAYLIST_ID, Uri.parse(playlists.next))
-            }
         }
 
-        SpotifyWebApiService.getSavedAlbums { savedAlbumPager ->
-            savedAlbumPager?.items?.iterator()?.forEach { savedAlbum ->
-                addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_ID)
-
-                savedAlbum.album.tracks.items.iterator().forEach { track ->
-                    addNodeToTree(track, ALBUM_ID + savedAlbum.album.id, savedAlbum.album.uri)
-                }
-            }
-
-            if (savedAlbumPager?.next != null) {
-                loadMoreItem(ALBUM_ID, Uri.parse(savedAlbumPager.next))
-            }
-        }
-
-        val savedShows = guardValidSpotifyApi { api: SpotifyClientApi ->
-            api.library.getSavedShows()
-        }
-
-        savedShows?.items?.forEach { savedShow ->
+        spotifyWebApiService.getSavedShows().forEach { savedShow: SavedShow ->
             addBrowsableToTree(savedShow.show.name, savedShow.show.id, SHOW_ID)
 
-            val episodes = guardValidSpotifyApi { api: SpotifyClientApi ->
-                api.shows.getShowEpisodes(savedShow.show.id)
+            spotifyWebApiService.getShowEpisodes(savedShow.show.id).forEach { simpleEpisode: SimpleEpisode ->
+                addEpisodeNodeToTree(simpleEpisode, SHOW_ID + savedShow.show.id, savedShow.show.uri.uri)
             }
-
-            episodes?.items?.forEach { episode: SimpleEpisode ->
-                addEpisodeNodeToTree(episode, SHOW_ID + savedShow.show.id, savedShow.show.uri.uri)
-            }
-
-            if (episodes?.next != null) {
-                loadMoreItem(SHOW_ID + savedShow.show.id, Uri.parse(episodes.next))
-            }
-        }
-
-        if (savedShows?.next != null) {
-            loadMoreItem(SHOW_ID, Uri.parse(savedShows.next))
         }
     }
 
@@ -275,12 +261,12 @@ object MediaItemTree {
         treeNodes[parentId]!!.addChild(idInTree)
     }
 
-    private fun addNodeToTree(mediaItem: TrackSimple, parentId: String, contextUri: String) {
+    private fun addNodeToTree(mediaItem: Track, parentId: String, contextUri: String) {
         val id = mediaItem.id
         val title = mediaItem.name
         val artist = mediaItem.artists.joinToString(", ") { artistSimple -> artistSimple.name }
         val genre = ""
-        val sourceUri = Uri.parse(mediaItem.uri)
+        val sourceUri = Uri.parse(mediaItem.uri.uri)
         val imageUri = Uri.parse(contextUri)
         val idInTree = ITEM_PREFIX + id
 
@@ -331,35 +317,6 @@ object MediaItemTree {
 
         titleMap[title.lowercase()] = treeNodes[idInTree]!!
         treeNodes[parentId]!!.addChild(idInTree)
-    }
-
-    fun loadMoreSongs(mediaId: String) {
-        var nextUri: Uri? = nextOptions[mediaId]
-        val limit = nextUri?.getQueryParameter("limit")?.toInt()
-        val offset = nextUri?.getQueryParameter("offset")?.toInt()
-
-        if (limit == null || offset == null ) {
-            return
-        }
-
-
-        when (true) {
-            mediaId.contains(LIKED_SONG_ID) -> {
-                SpotifyWebApiService.getLikedTracks(limit, offset) { savedTracks ->
-                    savedTracks?.items?.iterator()?.forEach {
-                        addNodeToTree(it.track, LIKED_SONG_ID, "spotify:user:$username:collection")
-                    }
-
-                    if (savedTracks?.next != null) {
-                        loadMoreItem(LIKED_SONG_ID, Uri.parse(savedTracks.next))
-                    }
-                }
-            }
-
-            else -> {
-
-            }
-        }
     }
 
     fun getItem(id: String): MediaItem? {

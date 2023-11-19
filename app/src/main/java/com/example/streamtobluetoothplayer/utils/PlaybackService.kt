@@ -233,11 +233,7 @@ class PlaybackService : MediaLibraryService() {
                 val currentMediaItem = player.currentMediaItem
                 player.stop()
 
-                if (currentMediaItem?.mediaId?.contains(MediaItemTree.LOAD_MORE_ID) == true) {
-                    MediaItemTree.loadMoreSongs(currentMediaItem.mediaId)
-                }
-
-                if (Player.STATE_IDLE !== playbackState) {
+                if (Player.STATE_IDLE != playbackState) {
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
                     val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 
