@@ -282,7 +282,7 @@ object MediaItemTree {
         val genre = ""
         val sourceUri = Uri.parse(mediaItem.uri.uri)
         val imageUri = Uri.parse(contextUri)
-        val idInTree = ITEM_PREFIX + id
+        val idInTree = ITEM_PREFIX + id + parentId
 
         treeNodes[idInTree] =
             MediaItemNode(
@@ -311,7 +311,7 @@ object MediaItemTree {
         val genre = ""
         val sourceUri = Uri.parse(episode.uri.uri)
         val imageUri = Uri.parse(contextUri)
-        val idInTree = ITEM_PREFIX + id
+        val idInTree = ITEM_PREFIX + id + parentId
 
         treeNodes[idInTree] =
             MediaItemNode(
