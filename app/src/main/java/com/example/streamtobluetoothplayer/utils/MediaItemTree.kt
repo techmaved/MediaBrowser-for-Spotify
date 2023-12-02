@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
  * demonstration purpose only.
  */
 object MediaItemTree {
+    var toBeSavedMediaItems: MutableList<com.example.streamtobluetoothplayer.entities.MediaItem> = mutableListOf()
     private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
     private var titleMap: MutableMap<String, MediaItemNode> = mutableMapOf()
     private var isInitialized = false
@@ -51,10 +52,8 @@ object MediaItemTree {
     private const val ITEM_PREFIX = "[item]"
     private const val PLAYLIST_ID = "[playlistId]"
     private const val SHOW_ID = "[showId]"
-    private var nextOptions: MutableMap<String, Uri> = mutableMapOf()
     private var username: String? = ""
     private val spotifyWebApiService = SpotifyWebApiService()
-    const val LOAD_MORE_ID = "[loadMoreId]"
 
     private class MediaItemNode(val item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
@@ -71,6 +70,45 @@ object MediaItemTree {
 
         fun getChildren(): List<MediaItem> {
             return ImmutableList.copyOf(children)
+        }
+    }
+
+    fun buildFromCache(mediaItems: List<com.example.streamtobluetoothplayer.entities.MediaItem>) {
+        createInitialMediaTree()
+
+        mediaItems.forEach { mediaItem: com.example.streamtobluetoothplayer.entities.MediaItem ->
+            val idInTree = mediaItem.mediaId
+
+            if (mediaItem.isBrowsable == true) {
+                treeNodes[idInTree] =
+                MediaItemNode(
+                    buildMediaItem(
+                        title = mediaItem.title,
+                        mediaId = idInTree,
+                        isPlayable = false,
+                        isBrowsable = true,
+                        mediaType = MediaMetadata.MEDIA_TYPE_PLAYLIST
+                    )
+                )
+            } else {
+                treeNodes[idInTree] =
+                    MediaItemNode(
+                        buildMediaItem(
+                            title = mediaItem.title,
+                            mediaId = mediaItem.mediaId,
+                            isPlayable = true,
+                            isBrowsable = false,
+                            mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
+                            album = null,
+                            artist = mediaItem.artist,
+                            genre = "",
+                            sourceUri = Uri.parse(mediaItem.source),
+                            imageUri = Uri.parse(mediaItem.context)
+                        )
+                    )
+            }
+
+            treeNodes[mediaItem.parent]!!.addChild(idInTree)
         }
     }
 
@@ -107,7 +145,7 @@ object MediaItemTree {
             .build()
     }
 
-    fun initialize() {
+    suspend fun initialize() {
         if (isInitialized) return
         isInitialized = true
 
@@ -170,31 +208,7 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChildren(arrayOf(LIKED_SONG_ID, PLAYLIST_ID, ALBUM_ID, SHOW_ID))
     }
 
-    /*
-    Add media item to tree that says load more and when trying to play load more this in parent id tree
-     */
-
-    private fun loadMoreItem(parentId: String, next: Uri) {
-        val idInTree = LOAD_MORE_ID + parentId
-
-        treeNodes[idInTree] =
-            MediaItemNode(
-                buildMediaItem(
-                    title = "Load More",
-                    mediaId = idInTree,
-                    isPlayable = true,
-                    isBrowsable = false,
-                    mediaType = MediaMetadata.MEDIA_TYPE_FOLDER_TRAILERS,
-                    sourceUri = Uri.parse("")
-                )
-            )
-
-        treeNodes[parentId]!!.addChild(idInTree)
-
-        nextOptions[idInTree] = next
-    }
-
-    private fun populateMediaTree() {
+    private suspend fun populateMediaTree() {
         username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
 
         /*
@@ -258,7 +272,7 @@ object MediaItemTree {
             )
 
         titleMap[name.lowercase()] = treeNodes[idInTree]!!
-        treeNodes[parentId]!!.addChild(idInTree)
+        addToBeSavedMediaItems(treeNodes[idInTree]!!.item, parentId)
     }
 
     private fun addNodeToTree(mediaItem: Track, parentId: String, contextUri: String) {
@@ -287,7 +301,7 @@ object MediaItemTree {
             )
 
         titleMap[title.lowercase()] = treeNodes[idInTree]!!
-        treeNodes[parentId]!!.addChild(idInTree)
+        addToBeSavedMediaItems(treeNodes[idInTree]!!.item, parentId)
     }
 
     private fun addEpisodeNodeToTree(episode: SimpleEpisode, parentId: String, contextUri: String) {
@@ -316,7 +330,21 @@ object MediaItemTree {
             )
 
         titleMap[title.lowercase()] = treeNodes[idInTree]!!
-        treeNodes[parentId]!!.addChild(idInTree)
+        addToBeSavedMediaItems(treeNodes[idInTree]!!.item, parentId)
+    }
+
+    private fun addToBeSavedMediaItems(mediaItem: MediaItem, parentId: String) {
+        val dbMediaItem = com.example.streamtobluetoothplayer.entities.MediaItem(
+            mediaId = mediaItem.mediaId,
+            title = mediaItem.mediaMetadata.title.toString(),
+            artist = mediaItem.mediaMetadata.artist.toString(),
+            source = mediaItem.localConfiguration?.uri.toString(),
+            context = mediaItem.mediaMetadata.artworkUri.toString(),
+            parent = parentId,
+            isBrowsable = mediaItem.mediaMetadata.isBrowsable
+        )
+
+        toBeSavedMediaItems.add(dbMediaItem)
     }
 
     fun getItem(id: String): MediaItem? {
