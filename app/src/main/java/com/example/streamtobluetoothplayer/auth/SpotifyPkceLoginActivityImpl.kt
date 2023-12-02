@@ -7,7 +7,7 @@ import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.SpotifyScope
 import com.example.streamtobluetoothplayer.Credentials
 import com.example.streamtobluetoothplayer.SpotifyAuth
-import com.example.streamtobluetoothplayer.activities.AuthenticatedActivity
+import com.example.streamtobluetoothplayer.activities.MainActivity
 
 internal var pkceClassBackTo: Class<out Activity>? = null
 
@@ -19,7 +19,7 @@ class SpotifyPkceLoginActivityImpl : AbstractSpotifyPkceLoginActivity() {
     override fun onSuccess(api: SpotifyClientApi) {
         val model = (application as SpotifyAuth).model
         model.credentialStore.setSpotifyApi(api)
-        val classBackTo = pkceClassBackTo ?: AuthenticatedActivity::class.java
+        val classBackTo = pkceClassBackTo ?: MainActivity::class.java
         startActivity(Intent(this, classBackTo))
     }
 
