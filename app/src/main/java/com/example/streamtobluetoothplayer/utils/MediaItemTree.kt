@@ -145,12 +145,11 @@ object MediaItemTree {
             .build()
     }
 
-    suspend fun initialize() {
+    fun initialize() {
         if (isInitialized) return
         isInitialized = true
 
         createInitialMediaTree()
-        populateMediaTree()
     }
 
     private fun createInitialMediaTree() {
@@ -208,7 +207,7 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChildren(arrayOf(LIKED_SONG_ID, PLAYLIST_ID, ALBUM_ID, SHOW_ID))
     }
 
-    private suspend fun populateMediaTree() {
+    suspend fun populateMediaTree() {
         username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
 
         spotifyWebApiService.getPlaylists(username)?.forEach { simplePlaylist: SimplePlaylist ->
