@@ -106,7 +106,7 @@ class SpotifyWebApiService {
 
     suspend fun getSavedShows(): List<SavedShow> {
         val shows = mutableListOf<SavedShow>()
-        val limit = 5
+        val limit = 50
         var offset = 0
         var next: String?
 
