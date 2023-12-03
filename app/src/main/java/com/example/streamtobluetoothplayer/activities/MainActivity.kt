@@ -8,16 +8,29 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +44,7 @@ import com.example.streamtobluetoothplayer.auth.pkceClassBackTo
 import com.example.streamtobluetoothplayer.models.Model
 import com.example.streamtobluetoothplayer.utils.AppDatabase
 import com.example.streamtobluetoothplayer.utils.MediaItemTree
+import com.example.streamtobluetoothplayer.utils.SpotifyWebApiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -75,22 +89,50 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
         modifier = Modifier.padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Button(onClick = {
-            CoroutineScope(Dispatchers.IO).launch {
-                val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
-                if (mediaItemDao.getAll().isNotEmpty()) {
-                    return@launch
-                }
-
-                MediaItemTree.initialize()
-                mediaItemDao.insertAll(MediaItemTree.toBeSavedMediaItems)
-                val mediaItems = mediaItemDao.getAll()
-                MediaItemTree.buildFromCache(mediaItems)
-                countState.value = mediaItems.count()
-            }
-        }) {
-            Text("Get Songs")
+        Row(
+            modifier = Modifier.padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("Authenticated")
+            Checkbox(
+                checked = token != null,
+                onCheckedChange = {  },
+                enabled = false
+            )
         }
+        Divider()
+
+        Text(
+            text = "Click button down below to start spotify authentication for this app",
+            modifier = Modifier.padding(16.dp)
+        )
+        Button(onClick = {
+            pkceClassBackTo = MainActivity::class.java
+            activity?.startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
+        }) {
+            Text("Start Spotify Authentication")
+        }
+
+        if (token != null) {
+            Button(onClick = {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
+                    if (mediaItemDao.getAll().isNotEmpty()) {
+                        return@launch
+                    }
+
+                    MediaItemTree.initialize()
+                    mediaItemDao.insertAll(MediaItemTree.toBeSavedMediaItems)
+                    val mediaItems = mediaItemDao.getAll()
+                    MediaItemTree.buildFromCache(mediaItems)
+                    countState.value = mediaItems.count()
+                }
+            }) {
+                Text("Get Songs")
+            }
+        }
+
         Text(
             text = "Get data from spotify put it in cache and build media library",
             modifier = Modifier.padding(16.dp)
@@ -104,28 +146,79 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
         }) {
             Text("Delete cache")
         }
-        Text(
-            text = "Click button down below to start spotify authentication for this app",
-            modifier = Modifier.padding(16.dp)
-        )
-        Button(onClick = {
-            pkceClassBackTo = MainActivity::class.java
-            activity?.startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
-        }) {
-            Text("Start Spotify Authentication")
+
+        var loading by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+
+        if (token != null) {
+            Text(
+                text = "Create or sync mirror of liked songs",
+                modifier = Modifier.padding(16.dp)
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(onClick = {
+                    loading = true
+                    scope.launch {
+                        SpotifyWebApiService().handleMirror()
+                        loading = false
+                    }
+                }, enabled = !loading) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(ButtonDefaults.IconSize),
+                                color = MaterialTheme.colorScheme.inversePrimary,
+                                strokeWidth = 2.dp
+                            )
+                        }
+
+                        Text("Create/sync mirror")
+                    }
+                }
+
+                LikedSongsHelpDialog()
+            }
         }
+    }
+}
+
+@Composable
+fun LikedSongsHelpDialog() {
+    val showDialog = remember { mutableStateOf(false) }
+
+    ElevatedButton(
+        onClick = { showDialog.value = !showDialog.value }
+    ) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Authenticated")
-            Checkbox(
-                checked = token != null,
-                onCheckedChange = {  },
-                enabled = false
-            )
+            Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
+            Text("Info")
         }
+    }
+
+    if (showDialog.value) {
+        AlertDialog(
+            onDismissRequest = { showDialog.value = false },
+            title = { Text("Futher explanation") },
+            text = { Text("Due to spotify limiting the liked songs in context you need to create a mirror of that" +
+                    "when you create or sync this mirror playlist gets created or updated with all you music") },
+            confirmButton = {
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog.value = false }) {
+                    Text("Cancel")
+                }
+            },
+        )
     }
 }
 
