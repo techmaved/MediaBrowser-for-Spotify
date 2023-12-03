@@ -10,7 +10,6 @@ import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import com.spotify.sdk.android.auth.LoginActivity.REQUEST_CODE
 
-
 class SpotifyAuthActivity : ComponentActivity() {
     private val clientId = Credentials.CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"

@@ -1,16 +1,9 @@
 package com.example.streamtobluetoothplayer.utils
 
-import android.app.Activity
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.SpotifyException
-import com.adamratzman.spotify.auth.SpotifyDefaultCredentialStore
-import com.adamratzman.spotify.auth.implicit.startSpotifyImplicitLoginActivity
-import com.adamratzman.spotify.auth.pkce.startSpotifyClientPkceLoginActivity
-import com.example.streamtobluetoothplayer.auth.SpotifyPkceLoginActivityImpl
-import com.example.streamtobluetoothplayer.auth.pkceClassBackTo
 import com.example.streamtobluetoothplayer.models.Model
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
 
 suspend fun <T> guardValidSpotifyApi(
     alreadyTriedToReauthenticate: Boolean = false,
