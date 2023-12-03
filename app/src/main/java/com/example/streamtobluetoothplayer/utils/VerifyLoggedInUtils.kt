@@ -2,6 +2,9 @@ package com.example.streamtobluetoothplayer.utils
 
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.SpotifyException
+import com.adamratzman.spotify.auth.pkce.startSpotifyClientPkceLoginActivity
+import com.example.streamtobluetoothplayer.activities.MainActivity
+import com.example.streamtobluetoothplayer.auth.SpotifyPkceLoginActivityImpl
 import com.example.streamtobluetoothplayer.models.Model
 import kotlinx.coroutines.coroutineScope
 
@@ -42,7 +45,7 @@ suspend fun <T> guardValidSpotifyApi(
                         )
                     }
                 } else {
-                    //startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
+                    MainActivity().startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
                     null
                 }
             } else {
