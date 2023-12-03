@@ -39,6 +39,9 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import com.example.streamtobluetoothplayer.Credentials
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
@@ -237,8 +240,10 @@ class PlaybackService : MediaLibraryService() {
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
                     val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 
-                    guardValidSpotifyApi { api: SpotifyClientApi ->
-                        api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        guardValidSpotifyApi { api: SpotifyClientApi ->
+                            api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
+                        }
                     }
                 }
             }

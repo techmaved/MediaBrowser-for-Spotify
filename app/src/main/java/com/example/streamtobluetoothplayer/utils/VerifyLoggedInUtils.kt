@@ -4,17 +4,18 @@ import android.app.Activity
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.SpotifyException
 import com.adamratzman.spotify.auth.SpotifyDefaultCredentialStore
+import com.adamratzman.spotify.auth.implicit.startSpotifyImplicitLoginActivity
 import com.adamratzman.spotify.auth.pkce.startSpotifyClientPkceLoginActivity
 import com.example.streamtobluetoothplayer.auth.SpotifyPkceLoginActivityImpl
 import com.example.streamtobluetoothplayer.auth.pkceClassBackTo
 import com.example.streamtobluetoothplayer.models.Model
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
 
-fun <T> guardValidSpotifyApi(
+suspend fun <T> guardValidSpotifyApi(
     alreadyTriedToReauthenticate: Boolean = false,
     block: suspend (api: SpotifyClientApi) -> T
-): T? {
-    return runBlocking {
+): T? = coroutineScope {
         try {
             val token = Model.credentialStore.spotifyToken
                 ?: throw SpotifyException.ReAuthenticationNeededException()
@@ -36,13 +37,13 @@ fun <T> guardValidSpotifyApi(
                         block(api)
                     } catch (e: SpotifyException.ReAuthenticationNeededException) {
                         e.printStackTrace()
-                        return@runBlocking guardValidSpotifyApi(
+                        return@coroutineScope guardValidSpotifyApi(
                             alreadyTriedToReauthenticate = true,
                             block = block
                         )
                     } catch (e: IllegalArgumentException) {
                         e.printStackTrace()
-                        return@runBlocking guardValidSpotifyApi(
+                        return@coroutineScope guardValidSpotifyApi(
                             alreadyTriedToReauthenticate = true,
                             block = block
                         )
@@ -57,5 +58,4 @@ fun <T> guardValidSpotifyApi(
                 null
             }
         }
-    }
 }
