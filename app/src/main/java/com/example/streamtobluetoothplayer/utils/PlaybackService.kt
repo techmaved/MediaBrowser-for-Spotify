@@ -112,6 +112,15 @@ class PlaybackService : MediaLibraryService() {
 
     private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
 
+        init {
+            CoroutineScope(Dispatchers.IO).launch {
+                println("read ing from cache")
+                val mediaItemDao = AppDatabase.getDatabase(this@PlaybackService).mediaDao()
+                val mediaItems = mediaItemDao.getAll()
+                MediaItemTree.buildFromCache(mediaItems)
+            }
+        }
+
         @SuppressLint("UnsafeOptInUsageError")
         override fun onConnect(session: MediaSession, controller: MediaSession.ControllerInfo): MediaSession.ConnectionResult {
             val availableSessionCommands =

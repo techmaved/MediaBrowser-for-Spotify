@@ -154,11 +154,11 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
 
                 scope.launch {
                     MediaItemTree.initialize()
+                    MediaItemTree.populateMediaTree()
 
                     CoroutineScope(Dispatchers.IO).launch {
                         val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
 
-                        MediaItemTree.initialize()
                         mediaItemDao.insertAll(MediaItemTree.toBeSavedMediaItems)
                         val mediaItems = mediaItemDao.getAll()
                         MediaItemTree.buildFromCache(mediaItems)
