@@ -60,15 +60,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    val count = remember { mutableStateOf(0) }
-
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        MediaItemsInDatabase(count)
-                        TextWithButtons(count, activity, Model.credentialStore.spotifyToken)
-                    }
+                    Ui(activity, Model.credentialStore.spotifyToken != null)
                 }
             }
         }
@@ -81,31 +73,51 @@ class MainActivity : ComponentActivity() {
 
 }
 
-@Composable
-fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = null, token: Token?) {
-    val context = LocalContext.current
+@Composable()
+fun Ui(activity: MainActivity?, isAuthenticated: Boolean) {
+    val count = remember { mutableStateOf(0) }
 
     Column(
-        modifier = Modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SpotifyAuthSection(isAuthenticated, activity)
+        MediaItemsInDatabase(count)
+        TextWithButtons(count, activity, isAuthenticated)
+        MirrorSection(isAuthenticated)
+    }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun Preview() {
+    Ui(null, true)
+}
+
+@Composable
+fun SpotifyAuthSection(isAuthenticated: Boolean, activity: MainActivity?) {
+    Column(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Authenticated")
             Checkbox(
-                checked = token != null,
+                checked = isAuthenticated,
                 onCheckedChange = {  },
                 enabled = false
             )
         }
-        Divider()
 
         Text(
             text = "Click button down below to start spotify authentication for this app",
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
         )
         Button(onClick = {
             pkceClassBackTo = MainActivity::class.java
@@ -113,8 +125,26 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
         }) {
             Text("Start Spotify Authentication")
         }
+        Divider()
+    }
+}
 
-        if (token != null) {
+
+@Composable
+fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = null, isAuthenticated: Boolean) {
+    val context = LocalContext.current
+
+    Column(
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = "Get data from spotify put it in cache and build media library",
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+        )
+
+        if (isAuthenticated) {
             Button(onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
                     val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
@@ -133,10 +163,6 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
             }
         }
 
-        Text(
-            text = "Get data from spotify put it in cache and build media library",
-            modifier = Modifier.padding(16.dp)
-        )
         Button(onClick = {
             CoroutineScope(Dispatchers.IO).launch {
                 val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
@@ -146,45 +172,48 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
         }) {
             Text("Delete cache")
         }
+    }
+}
 
-        var loading by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
+@Composable
+fun MirrorSection(isAuthenticated: Boolean) {
+    var loading by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
-        if (token != null) {
-            Text(
-                text = "Create or sync mirror of liked songs",
-                modifier = Modifier.padding(16.dp)
-            )
+    if (isAuthenticated) {
+        Text(
+            text = "Create or sync mirror of liked songs",
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp)
+        )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(onClick = {
-                    loading = true
-                    scope.launch {
-                        SpotifyWebApiService().handleMirror()
-                        loading = false
-                    }
-                }, enabled = !loading) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(ButtonDefaults.IconSize),
-                                color = MaterialTheme.colorScheme.inversePrimary,
-                                strokeWidth = 2.dp
-                            )
-                        }
-
-                        Text("Create/sync mirror")
-                    }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Button(onClick = {
+                loading = true
+                scope.launch {
+                    SpotifyWebApiService().handleMirror()
+                    loading = false
                 }
+            }, enabled = !loading) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                            color = MaterialTheme.colorScheme.inversePrimary,
+                            strokeWidth = 2.dp
+                        )
+                    }
 
-                LikedSongsHelpDialog()
+                    Text("Create/sync mirror")
+                }
             }
+
+            LikedSongsHelpDialog()
         }
     }
 }
@@ -222,15 +251,6 @@ fun LikedSongsHelpDialog() {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun TextWithButtonsPreview() {
-    StreamToBluetoothPlayerTheme {
-        val count = remember { mutableStateOf(0) }
-        TextWithButtons(count, token = null)
-    }
-}
-
 @Composable
 fun MediaItemsInDatabase(countState: MutableState<Int>) {
     val context = LocalContext.current
@@ -243,19 +263,12 @@ fun MediaItemsInDatabase(countState: MutableState<Int>) {
     }
 
     Column(
-        modifier = Modifier.padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text("Current count of media items in database:")
         Text(countState.value.toString())
-    }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun MediaItemsInDatabasePreview() {
-    StreamToBluetoothPlayerTheme {
-        val count = remember { mutableStateOf(0) }
-        MediaItemsInDatabase(count)
+        Divider()
     }
 }
