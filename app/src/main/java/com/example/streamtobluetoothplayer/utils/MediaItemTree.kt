@@ -211,14 +211,20 @@ object MediaItemTree {
     private suspend fun populateMediaTree() {
         username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
 
-        /*
-        // TODO: some code changes this into random playlist uri that contains song
-        spotifyWebApiService.getAllSavedTracks().forEach { track: SavedTrack ->
-            addNodeToTree(track.track, LIKED_SONG_ID, "spotify:user:$username:collection")
-        }
-        */
-
         spotifyWebApiService.getPlaylists(username)?.forEach { simplePlaylist: SimplePlaylist ->
+            if (simplePlaylist.name == spotifyWebApiService.mirrorName) {
+                spotifyWebApiService.getPlaylistTracks(simplePlaylist.id).forEach { playlistTrack: PlaylistTrack ->
+                    playlistTrack.track?.asTrack?.let {
+                        addNodeToTree(
+                            it,
+                            LIKED_SONG_ID,
+                            simplePlaylist.uri.uri
+                        )
+                    }
+                }
+                return@forEach
+            }
+
             addBrowsableToTree(simplePlaylist.name, simplePlaylist.id, PLAYLIST_ID)
 
             spotifyWebApiService.getPlaylistTracks(simplePlaylist.id).forEach { playlistTrack: PlaylistTrack ->
