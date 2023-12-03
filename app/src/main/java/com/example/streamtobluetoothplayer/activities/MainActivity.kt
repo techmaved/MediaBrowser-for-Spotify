@@ -144,22 +144,42 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
             modifier = Modifier.padding(start = 16.dp, end = 16.dp)
         )
 
+        var loading by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+
         if (isAuthenticated) {
             Button(onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
-                    if (mediaItemDao.getAll().isNotEmpty()) {
-                        return@launch
+                loading = true
+
+                scope.launch {
+                    MediaItemTree.initialize()
+
+                    CoroutineScope(Dispatchers.IO).launch {
+                        val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
+
+                        MediaItemTree.initialize()
+                        mediaItemDao.insertAll(MediaItemTree.toBeSavedMediaItems)
+                        val mediaItems = mediaItemDao.getAll()
+                        MediaItemTree.buildFromCache(mediaItems)
+                        countState.value = mediaItems.count()
+                    }
+                    loading = false
+                }
+            }, enabled = !loading) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(ButtonDefaults.IconSize),
+                            color = MaterialTheme.colorScheme.inversePrimary,
+                            strokeWidth = 2.dp
+                        )
                     }
 
-                    MediaItemTree.initialize()
-                    mediaItemDao.insertAll(MediaItemTree.toBeSavedMediaItems)
-                    val mediaItems = mediaItemDao.getAll()
-                    MediaItemTree.buildFromCache(mediaItems)
-                    countState.value = mediaItems.count()
+                    Text("Get Songs")
                 }
-            }) {
-                Text("Get Songs")
             }
         }
 
