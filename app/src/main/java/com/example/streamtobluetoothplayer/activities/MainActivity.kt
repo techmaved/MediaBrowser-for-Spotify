@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adamratzman.spotify.auth.pkce.startSpotifyClientPkceLoginActivity
-import com.adamratzman.spotify.models.Token
 import com.example.streamtobluetoothplayer.auth.SpotifyPkceLoginActivityImpl
 import com.example.streamtobluetoothplayer.ui.theme.StreamToBluetoothPlayerTheme
 import com.example.streamtobluetoothplayer.auth.pkceClassBackTo
@@ -75,7 +74,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable()
 fun Ui(activity: MainActivity?, isAuthenticated: Boolean) {
-    val count = remember { mutableStateOf(0) }
+    val mediaItemCount = remember { mutableStateOf(0) }
 
     Column(
         modifier = Modifier.padding(start = 16.dp, end = 16.dp),
@@ -83,8 +82,8 @@ fun Ui(activity: MainActivity?, isAuthenticated: Boolean) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         SpotifyAuthSection(isAuthenticated, activity)
-        MediaItemsInDatabase(count)
-        TextWithButtons(count, activity, isAuthenticated)
+        MediaItemsInDatabase(mediaItemCount)
+        TextWithButtons(mediaItemCount, activity, isAuthenticated)
         MirrorSection(isAuthenticated)
     }
 }
@@ -145,11 +144,13 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
         )
 
         var loading by remember { mutableStateOf(false) }
+        var isGetSongsButtonEnabled by remember { mutableStateOf(true) }
         val scope = rememberCoroutineScope()
 
         if (isAuthenticated) {
             Button(onClick = {
                 loading = true
+                isGetSongsButtonEnabled = false
 
                 scope.launch {
                     MediaItemTree.initialize()
@@ -165,7 +166,7 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
                     }
                     loading = false
                 }
-            }, enabled = !loading) {
+            }, enabled = isGetSongsButtonEnabled) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -188,8 +189,9 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
                 val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
                 mediaItemDao.deleteAll()
                 countState.value = 0
+                isGetSongsButtonEnabled = true
             }
-        }) {
+        }, enabled = countState.value > 0) {
             Text("Delete cache")
         }
     }
