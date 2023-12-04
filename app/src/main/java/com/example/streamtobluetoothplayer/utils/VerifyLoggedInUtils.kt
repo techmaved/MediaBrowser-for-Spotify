@@ -48,10 +48,7 @@ suspend fun <T> guardValidSpotifyApi(
                     MainActivity().startSpotifyClientPkceLoginActivity(SpotifyPkceLoginActivityImpl::class.java)
                     null
                 }
-            } else {
-                //SpotifyDefaultCredentialStore.activityBackOnImplicitAuth = classBackTo
-                //startSpotifyImplicitLoginActivity(SpotifyImplicitLoginActivityImpl::class.java)
-                null
             }
+            null
         }
 }

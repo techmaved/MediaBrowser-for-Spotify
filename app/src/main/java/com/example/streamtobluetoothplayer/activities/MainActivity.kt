@@ -140,6 +140,8 @@ fun TextWithButtons(countState: MutableState<Int>, activity: MainActivity? = nul
 
         var loading by remember { mutableStateOf(false) }
         var isGetSongsButtonEnabled by remember { mutableStateOf(true) }
+        isGetSongsButtonEnabled = countState.value == 0
+
         val scope = rememberCoroutineScope()
 
         if (isAuthenticated) {
