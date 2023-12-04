@@ -14,7 +14,6 @@ class SpotifyAuthActivity : ComponentActivity() {
     private val clientId = Credentials.CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -25,9 +24,7 @@ class SpotifyAuthActivity : ComponentActivity() {
 
         builder.setScopes(
             arrayOf(
-                "user-library-read",
                 "streaming",
-                "playlist-read-private",
             )
         )
         val request = builder.build()
@@ -39,14 +36,12 @@ class SpotifyAuthActivity : ComponentActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, intent: Intent?) {
         super.onActivityResult(requestCode, resultCode, intent)
 
-        // Check if result comes from the correct activity
         if (requestCode == REQUEST_CODE) {
             val response = AuthorizationClient.getResponse(resultCode, intent)
             when (response.type) {
                 AuthorizationResponse.Type.TOKEN -> {
-                    //val intent = Intent(this, MainActivity::class.java)
-                    //intent.putExtra("token", response.accessToken)
-                    //startActivity(intent)
+                    val intent = Intent(this, MainActivity::class.java)
+                    startActivity(intent)
                 }
 
                 AuthorizationResponse.Type.ERROR -> {}
