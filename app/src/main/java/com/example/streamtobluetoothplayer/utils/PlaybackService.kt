@@ -8,7 +8,9 @@ import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.app.PendingIntent.getActivity
 import android.app.TaskStackBuilder
+import android.content.Context
 import android.content.Intent
+import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -48,6 +50,7 @@ class PlaybackService : MediaLibraryService() {
     private val clientId = Credentials.CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
+    private var audioManager: AudioManager? = null
 
     private lateinit var player: ExoPlayer
     private lateinit var mediaLibrarySession: MediaLibrarySession
@@ -68,6 +71,7 @@ class PlaybackService : MediaLibraryService() {
         initializeSessionAndPlayer()
         setListener(MediaSessionServiceListener())
         connectToSpotifyAppRemote()
+        audioManager = applicationContext.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     }
 
     private fun connectToSpotifyAppRemote() {
@@ -249,9 +253,18 @@ class PlaybackService : MediaLibraryService() {
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
                     val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 
-                    CoroutineScope(Dispatchers.IO).launch {
-                        guardValidSpotifyApi { api: SpotifyClientApi ->
-                            api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
+                    audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
+                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())
+
+                    spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
+                        if (it.track != null) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                guardValidSpotifyApi { api: SpotifyClientApi ->
+                                    api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
+                                }
+
+                                audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
+                            }
                         }
                     }
                 }
