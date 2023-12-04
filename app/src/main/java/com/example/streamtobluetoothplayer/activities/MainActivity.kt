@@ -63,11 +63,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
-        CoroutineScope(Dispatchers.IO).launch {
-            val mediaItemDao = AppDatabase.getDatabase(applicationContext).mediaDao()
-            MediaItemTree.buildFromCache(mediaItemDao.getAll())
-        }
     }
 
 }

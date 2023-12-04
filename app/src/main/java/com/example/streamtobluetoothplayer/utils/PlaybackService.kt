@@ -14,11 +14,14 @@ import android.media.AudioManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaLibraryInfo.TAG
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSourceBitmapLoader
 import androidx.media3.exoplayer.ExoPlayer
@@ -114,11 +117,11 @@ class PlaybackService : MediaLibraryService() {
         super.onDestroy()
     }
 
-    private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
+    @OptIn(UnstableApi::class) private inner class CustomMediaLibrarySessionCallback : MediaLibrarySession.Callback {
 
         init {
             CoroutineScope(Dispatchers.IO).launch {
-                println("read ing from cache")
+                Log.d(TAG, "building media item tree from cache")
                 val mediaItemDao = AppDatabase.getDatabase(this@PlaybackService).mediaDao()
                 val mediaItems = mediaItemDao.getAll()
                 MediaItemTree.buildFromCache(mediaItems)
