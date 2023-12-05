@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Stream to Bluetooth Player"
+rootProject.name = "SpotifyMediaBrowser"
 include(":app")
  

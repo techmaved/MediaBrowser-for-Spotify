@@ -1,1 +1,1 @@
-# Stream to Bluetooth Player
+# SpotifyMediaBrowser
