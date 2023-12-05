@@ -70,7 +70,7 @@ dependencies {
     implementation(files("../libs/spotify-app-remote-release-0.8.0.aar"))
     //implementation(files("../libs/spotify-auth-release-2.1.0.aar"))
     implementation("com.github.pghazal.spotify-web-api-android:api-retrofit2:1.0.2")
-    implementation("com.google.code.gson:gson:2.9.0")
+    implementation("com.google.code.gson:gson:2.10.1")
     implementation("androidx.media3:media3-exoplayer:1.2.0")
     implementation("androidx.media3:media3-ui:1.2.0")
     implementation("androidx.media3:media3-common:1.2.0")
