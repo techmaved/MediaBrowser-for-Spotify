@@ -82,7 +82,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
-    implementation("com.adamratzman:spotify-api-kotlin-core:4.0.2")
+    implementation("com.adamratzman:spotify-api-kotlin-core:4.0.3")
     implementation("androidx.appcompat:appcompat:1.6.1")
 
     val room_version = "2.6.0"
