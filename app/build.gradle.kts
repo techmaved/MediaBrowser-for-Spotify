@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.streamtobluetoothplayer"
+    namespace = "de.techmaved.spotifymediabrowser"
     compileSdk = 34
 
     defaultConfig {
@@ -13,7 +13,7 @@ android {
             "redirectSchemeName" to "spotify-sdk",
             "redirectHostName" to "auth"
         )
-        applicationId = "com.example.streamtobluetoothplayer"
+        applicationId = "de.techmaved.spotifymediabrowser"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
