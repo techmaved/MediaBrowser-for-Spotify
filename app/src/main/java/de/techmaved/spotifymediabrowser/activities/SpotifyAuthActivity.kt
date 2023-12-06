@@ -4,14 +4,14 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
-import de.techmaved.spotifymediabrowser.Credentials
 import com.spotify.sdk.android.auth.AuthorizationClient
 import com.spotify.sdk.android.auth.AuthorizationRequest
 import com.spotify.sdk.android.auth.AuthorizationResponse
 import com.spotify.sdk.android.auth.LoginActivity.REQUEST_CODE
+import de.techmaved.spotifymediabrowser.BuildConfig
 
 class SpotifyAuthActivity : ComponentActivity() {
-    private val clientId = Credentials.CLIENT_ID
+    private val clientId = BuildConfig.SPOTIFY_CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"
 
     override fun onCreate(savedInstanceState: Bundle?) {
