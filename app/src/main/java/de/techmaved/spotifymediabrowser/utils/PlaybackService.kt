@@ -43,14 +43,14 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
-import de.techmaved.spotifymediabrowser.Credentials
+import de.techmaved.spotifymediabrowser.BuildConfig
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
-    private val clientId = Credentials.CLIENT_ID
+    private val clientId = BuildConfig.SPOTIFY_CLIENT_ID
     private val redirectUri = "http://localhost:8888/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
     private var audioManager: AudioManager? = null

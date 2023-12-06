@@ -1,3 +1,5 @@
+import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -7,6 +9,10 @@ plugins {
 android {
     namespace = "de.techmaved.spotifymediabrowser"
     compileSdk = 34
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         manifestPlaceholders += mapOf(
@@ -23,6 +29,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        buildConfigField(
+            "String",
+            "SPOTIFY_CLIENT_ID",
+            "\"${gradleLocalProperties(rootDir).getProperty("SPOTIFY_CLIENT_ID")}\""
+        )
     }
 
     buildTypes {
