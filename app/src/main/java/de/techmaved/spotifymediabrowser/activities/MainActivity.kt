@@ -1,5 +1,6 @@
 package de.techmaved.spotifymediabrowser.activities
 
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -19,8 +20,10 @@ import androidx.compose.ui.unit.dp
 import de.techmaved.spotifymediabrowser.components.Authentication
 import de.techmaved.spotifymediabrowser.components.Database
 import de.techmaved.spotifymediabrowser.components.MediaItems
+import de.techmaved.spotifymediabrowser.components.SpotifyDesign
 import de.techmaved.spotifymediabrowser.models.Model
 import de.techmaved.spotifymediabrowser.ui.theme.SpotifyMediaBrowserTheme
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,15 +38,25 @@ class MainActivity : ComponentActivity() {
                     Ui(
                         activity,
                         Model.credentialStore.spotifyToken != null,
+                        isPackageInstalled(SpotifyDesign().spotifyPackage, applicationContext.packageManager)
                     )
                 }
             }
         }
     }
+
+    private fun isPackageInstalled(packageName: String, packageManager: PackageManager): Boolean {
+        return try {
+            packageManager.getPackageInfo(packageName, 0)
+            true
+        } catch (e: PackageManager.NameNotFoundException) {
+            false
+        }
+    }
 }
 
 @Composable()
-fun Ui(activity: MainActivity?, isAuthenticated: Boolean) {
+fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Boolean) {
     val mediaItemCount = remember { mutableStateOf(0) }
 
     Column(
@@ -55,11 +68,12 @@ fun Ui(activity: MainActivity?, isAuthenticated: Boolean) {
         Database().MediaItemsInDatabase(mediaItemCount)
         MediaItems().TextWithButtons(mediaItemCount, isAuthenticated)
         MediaItems().MirrorSection(isAuthenticated)
+        SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
     }
 }
 
 @Composable
 @Preview(showBackground = true)
 fun Preview() {
-    Ui(null, true)
+    Ui(null, true, true)
 }
