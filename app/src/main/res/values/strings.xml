@@ -1,7 +1,10 @@
 <resources>
-    <string name="app_name">SpotifyMediaBrowser</string>
+    <string name="app_name">Media Browser for Spotify</string>
     <string name="title_activity_spotify_auth">SpotifyAuthActivity</string>
     <string name="title_activity_player">PlayerActivity</string>
     <string name="title_activity_spotify_pkce_login_impl">SpotifyPkceLoginActivityImpl</string>
     <string name="title_activity_authenticated">AuthenticatedActivity</string>
+    <string name="spotify_logo">Spotify Logo</string>
+    <string name="get_spotify">GET SPOTIFY FREE</string>
+    <string name="open_spotify">OPEN SPOTIFY</string>
 </resources>

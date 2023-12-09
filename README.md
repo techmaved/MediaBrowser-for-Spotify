@@ -1,4 +1,4 @@
-# SpotifyMediaBrowser
+# MediaBrowser for Spotify
 
 ## Overview
 This app provides your Spotify music to other apps with the help of Android Jetpack's Media3 MediaBrowser.
@@ -11,7 +11,7 @@ The following content from your library will be shared via the MediaBrowser on y
 * Podcasts
   * episodes included
 
-While browsing the media library of SpotifyMediaBrowser select songs/episodes, and they
+While browsing the media library of MediaBrowser for Spotify select songs/episodes, and they
 are going to either on:
 * an active device associated to your Spotify account
 * on device with your installed Spotify app (fallback)
@@ -21,4 +21,4 @@ are going to either on:
 * Android 7.0
 
 ## License
-This app is licensed under [GPLv3](https://github.com/techmaved/SpotifyMediaBrowser/blob/main/LICENSE.md), see LICENSE.md for more information.
+This app is licensed under [GPLv3](https://github.com/techmaved/MediaBrowser-for-Spotify/blob/main/LICENSE.md), see LICENSE.md for more information.
