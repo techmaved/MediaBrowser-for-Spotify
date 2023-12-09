@@ -14,6 +14,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SpotifyMediaBrowser"
+rootProject.name = "Media Browser for Spotify"
 include(":app")
  

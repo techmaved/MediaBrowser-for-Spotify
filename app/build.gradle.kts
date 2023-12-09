@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "de.techmaved.spotifymediabrowser"
+    namespace = "de.techmaved.mediabrowserforspotify"
     compileSdk = 34
 
     buildFeatures {
@@ -19,7 +19,7 @@ android {
             "redirectSchemeName" to "spotify-sdk",
             "redirectHostName" to "auth"
         )
-        applicationId = "de.techmaved.spotifymediabrowser"
+        applicationId = "de.techmaved.mediabrowserforspotify"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
