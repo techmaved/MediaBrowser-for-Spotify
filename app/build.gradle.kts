@@ -35,6 +35,12 @@ android {
             "SPOTIFY_CLIENT_ID",
             "\"${gradleLocalProperties(rootDir).getProperty("SPOTIFY_CLIENT_ID")}\""
         )
+
+        buildConfigField(
+            "String",
+            "SPOTIFY_REDIRECT_URI",
+            "\"${"mediabrowserforspotify://auth"}\""
+        )
     }
 
     buildTypes {
