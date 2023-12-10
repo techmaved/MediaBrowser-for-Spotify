@@ -13,7 +13,7 @@ internal var pkceClassBackTo: Class<out Activity>? = null
 
 class SpotifyPkceLoginActivityImpl : AbstractSpotifyPkceLoginActivity() {
     override val clientId = BuildConfig.SPOTIFY_CLIENT_ID
-    override val redirectUri = "mediabrowserforspotify://auth"
+    override val redirectUri = BuildConfig.SPOTIFY_REDIRECT_URI
     override val scopes = SpotifyScope.values().toList()
 
     override fun onSuccess(api: SpotifyClientApi) {

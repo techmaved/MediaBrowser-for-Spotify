@@ -8,7 +8,7 @@ object Model {
     val credentialStore by lazy {
         SpotifyDefaultCredentialStore(
             clientId = BuildConfig.SPOTIFY_CLIENT_ID,
-            redirectUri = "mediabrowserforspotify://auth",
+            redirectUri = BuildConfig.SPOTIFY_REDIRECT_URI,
             applicationContext = SpotifyAuth.context
         )
     }
