@@ -35,7 +35,6 @@
         <activity
             android:name=".activities.PlayerActivity"
             android:exported="false"
-            android:label="@string/title_activity_player"
             android:theme="@style/Theme.MediaBrowserForSpotify" />
 
         <service
@@ -51,7 +50,6 @@
         <activity
             android:name=".activities.SpotifyAuthActivity"
             android:exported="true"
-            android:label="@string/title_activity_spotify_auth"
             android:theme="@style/Theme.MediaBrowserForSpotify">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
