@@ -6,18 +6,6 @@
 version: 2
 updates:
 
-  #project
-  - package-ecosystem: "gradle"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-
-  #app
-  - package-ecosystem: "gradle"
-    directory: "/app/"
-    schedule:
-      interval: "weekly"
-
   # Maintain dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
