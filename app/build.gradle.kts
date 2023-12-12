@@ -14,11 +14,21 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("keystore.jks")
+            storePassword = System.getenv("SIGNING_STORE_PASSWORD")
+            keyAlias = System.getenv("SIGNING_KEY_ALIAS")
+            keyPassword = System.getenv("SIGNING_KEY_PASSWORD")
+        }
+    }
+
     defaultConfig {
         manifestPlaceholders += mapOf(
             "redirectSchemeName" to "spotify-sdk",
             "redirectHostName" to "auth"
         )
+
         applicationId = "de.techmaved.mediabrowserforspotify"
         minSdk = 24
         targetSdk = 34
