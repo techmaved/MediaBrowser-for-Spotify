@@ -51,7 +51,7 @@ on:
 
 
       - name: Create Github Pre Release Release
-        if: endsWith(${{ github.ref_name }}, 'beta')
+        if: ${{ endsWith(github.ref_name, 'beta') }}
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
@@ -60,7 +60,7 @@ on:
             app/build/outputs/apk/release/app-release.apk
 
       - name: Create Github Release Release
-        if:  !endsWith(${{ github.ref_name }}, 'beta')
+        if:  ${{ !endsWith(github.ref_name, 'beta') }}
         uses: softprops/action-gh-release@v1
         with:
           generate_release_notes: true
