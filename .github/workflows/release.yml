@@ -50,8 +50,7 @@ jobs:
         uses: actions/upload-artifact@v3.1.3
         with:
           name: release-artifacts
-          paths: |
-            app/build/outputs/apk/release/
+          path: app/build/outputs/apk/release/
 
 
       - name: Create Github Pre Release Release
