@@ -29,7 +29,7 @@ jobs:
         with:
           fileName: 'android_keystore.jks'
           fileDir: '/home/runner/work/MediaBrowser-for-Spotify/MediaBrowser-for-Spotify/app/keystore/'
-          encodedString: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+          encodedString: ${{ secrets.KEYSTORE }}
 
       # Build and sign APK ("-x test" argument is used to skip tests)
       - name: Build APK
