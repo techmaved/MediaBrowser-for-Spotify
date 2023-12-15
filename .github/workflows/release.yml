@@ -29,11 +29,12 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
 
       - name: Decode Keystore
-        env:
-          ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+        id: decode_keystore
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: 'app/keystore.jks'
+          encodedString: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
 
-        run: |
-          echo $ENCODED_STRING | base64 --decode > app/keystore.jks
       - name: Build Release apk
         env:
           SIGNING_KEY_STORE_PATH: app/keystore.jks
