@@ -1,5 +1,3 @@
-import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -43,7 +41,7 @@ android {
         buildConfigField(
             "String",
             "SPOTIFY_CLIENT_ID",
-            "\"${gradleLocalProperties(rootDir).getProperty("SPOTIFY_CLIENT_ID")}\""
+            "\"${"713b5da48aaa48309005f5448d1842f3"}\""
         )
 
         buildConfigField(
