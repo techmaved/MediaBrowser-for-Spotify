@@ -20,6 +20,9 @@ jobs:
           distribution: 'corretto'
           java-version: 17
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Cache Gradle and wrapper
         uses: actions/cache@v2
         with:
@@ -29,12 +32,10 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
 
       - name: Decode Keystore
-        id: decode_keystore
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: 'app/keystore.jks'
-          encodedString: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
-
+        env:
+          ENCODED_STRING: ${{ secrets.SIGNING_KEY_STORE_BASE64 }}
+        run: |
+          echo $ENCODED_STRING | base64 --decode > app/keystore.jks
       - name: Build Release apk
         env:
           SIGNING_KEY_STORE_PATH: app/keystore.jks
