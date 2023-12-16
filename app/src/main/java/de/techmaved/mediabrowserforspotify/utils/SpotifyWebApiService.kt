@@ -10,6 +10,7 @@ import com.adamratzman.spotify.models.SavedTrack
 import com.adamratzman.spotify.models.SimpleEpisode
 import com.adamratzman.spotify.models.SimplePlaylist
 import com.adamratzman.spotify.models.SimpleTrack
+import de.techmaved.mediabrowserforspotify.BuildConfig
 
 class SpotifyWebApiService {
      val mirrorName = "Liked Songs Mirror"
@@ -17,7 +18,7 @@ class SpotifyWebApiService {
 
      suspend fun getAllSavedTracks(): List<SavedTrack> {
         val tracks = mutableListOf<SavedTrack>()
-        var limit: Int = 50
+        var limit: Int = getLimit()
         var offset: Int = 0
         var next: String?
 
@@ -26,7 +27,7 @@ class SpotifyWebApiService {
              tracks.addAll(savedTracks?.items as Collection<SavedTrack>)
 
              offset += limit
-             next = savedTracks.next
+             next = getNext(savedTracks.next)
          } while (next != null)
 
         return tracks
@@ -38,7 +39,7 @@ class SpotifyWebApiService {
         }
 
         val playlists = mutableListOf<SimplePlaylist>()
-        val limit: Int = 50
+        val limit: Int = getLimit()
         var offset: Int = 0
         var next: String?
 
@@ -47,7 +48,7 @@ class SpotifyWebApiService {
             playlists.addAll(userPlaylists?.items as Collection<SimplePlaylist>)
 
             offset += limit
-            next = userPlaylists.next
+            next = getNext(userPlaylists.next)
         } while (next != null)
 
         return playlists
@@ -55,7 +56,7 @@ class SpotifyWebApiService {
 
     suspend fun getSavedAlbums(): List<SavedAlbum> {
         val savedAlbums = mutableListOf<SavedAlbum>()
-        val limit = 50
+        val limit = getLimit()
         var offset = 0
         var next: String?
 
@@ -64,7 +65,7 @@ class SpotifyWebApiService {
             savedAlbums.addAll(albums?.items as Collection<SavedAlbum>)
 
             offset += limit
-            next = albums.next
+            next = getNext(albums.next)
         } while (next != null)
 
         return savedAlbums
@@ -72,7 +73,7 @@ class SpotifyWebApiService {
 
     suspend fun getAlbumTracks(albumId: String): List<SimpleTrack> {
         val albumTracks = mutableListOf<SimpleTrack>()
-        val limit = 50
+        val limit = getLimit()
         var offset = 0
         var next: String?
 
@@ -81,7 +82,7 @@ class SpotifyWebApiService {
             albumTracks.addAll(tracks?.items as Collection<SimpleTrack>)
 
             offset += limit
-            next = tracks.next
+            next = getNext(tracks.next)
         } while (next != null)
 
         return albumTracks
@@ -89,7 +90,7 @@ class SpotifyWebApiService {
 
     suspend fun getPlaylistTracks(playlistId: String): List<PlaylistTrack> {
         val playlistTracks = mutableListOf<PlaylistTrack>()
-        val limit = 50
+        val limit = getLimit()
         var offset = 0
         var next: String?
 
@@ -98,7 +99,7 @@ class SpotifyWebApiService {
             playlistTracks.addAll(tracks?.items as Collection<PlaylistTrack>)
 
             offset += limit
-            next = tracks.next
+            next = getNext(tracks.next)
         } while (next != null)
 
         return playlistTracks
@@ -106,7 +107,7 @@ class SpotifyWebApiService {
 
     suspend fun getSavedShows(): List<SavedShow> {
         val shows = mutableListOf<SavedShow>()
-        val limit = 50
+        val limit = getLimit()
         var offset = 0
         var next: String?
 
@@ -115,7 +116,7 @@ class SpotifyWebApiService {
             shows.addAll(savedShows?.items as Collection<SavedShow>)
 
             offset += limit
-            next = savedShows.next
+            next = getNext(savedShows.next)
         } while (next != null)
 
         return shows
@@ -123,7 +124,7 @@ class SpotifyWebApiService {
 
     suspend fun getShowEpisodes(showId: String): List<SimpleEpisode> {
         val episodes = mutableListOf<SimpleEpisode>()
-        val limit = 50
+        val limit = getLimit()
         var offset = 0
         var next: String?
 
@@ -132,7 +133,7 @@ class SpotifyWebApiService {
             episodes.addAll(showEpisodes?.items as Collection<SimpleEpisode>)
 
             offset += limit
-            next = showEpisodes.next
+            next = getNext(showEpisodes.next)
         } while (next != null)
 
         return episodes
@@ -200,5 +201,21 @@ class SpotifyWebApiService {
                 )}
             }
         }
+    }
+
+    private fun getLimit(): Int {
+        if (BuildConfig.DEBUG) {
+            return 5
+        }
+
+        return 50
+    }
+
+    private fun getNext(next: String?): String? {
+        if (BuildConfig.DEBUG) {
+            return null
+        }
+
+        return next
     }
 }

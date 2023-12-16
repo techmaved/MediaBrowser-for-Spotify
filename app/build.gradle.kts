@@ -62,8 +62,15 @@ android {
             signingConfig = signingConfigs["release"]
         }
 
-        create("customDebugType") {
-            isDebuggable = true
+        debug {
+            buildConfigField(
+                "String",
+                "SPOTIFY_REDIRECT_URI",
+                "\"${"mediabrowserforspotifydebug://auth"}\""
+            )
+
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = ".debug"
         }
     }
     compileOptions {
