@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
+    id("io.github.reactivecircus.app-versioning")
 }
 
 android {
@@ -73,6 +74,13 @@ android {
             versionNameSuffix = ".debug"
         }
     }
+
+    appVersioning {
+        overrideVersionName { gitTag, _, _ ->
+            gitTag.rawTagName.replaceFirst("v", "")
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
