@@ -94,6 +94,9 @@ android {
 }
 
 dependencies {
+    val roomVersion = "2.6.1"
+    val acraVersion = "5.11.3"
+
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
     implementation("androidx.activity:activity-compose:1.8.1")
@@ -119,8 +122,6 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.4")
     implementation("com.adamratzman:spotify-api-kotlin-core:4.0.3")
     implementation("androidx.appcompat:appcompat:1.6.1")
-
-    val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     annotationProcessor("androidx.room:room-compiler:$roomVersion")
     ksp("androidx.room:room-compiler:$roomVersion")
@@ -130,4 +131,10 @@ dependencies {
     implementation("androidx.room:room-guava:$roomVersion")
     testImplementation("androidx.room:room-testing:$roomVersion")
     implementation("androidx.room:room-paging:$roomVersion")
+    implementation("ch.acra:acra-core:$acraVersion")
+    implementation("ch.acra:acra-dialog:$acraVersion")
+    compileOnly("com.google.auto.service:auto-service-annotations:1.1.1")
+    ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
+    ksp("com.google.auto.service:auto-service:1.1.1")
+    implementation("androidx.documentfile:documentfile:1.0.1")
 }

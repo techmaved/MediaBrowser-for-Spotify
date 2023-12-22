@@ -3,9 +3,13 @@ package de.techmaved.mediabrowserforspotify
 import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
+import de.techmaved.mediabrowserforspotify.components.ErrorDialog
 import de.techmaved.mediabrowserforspotify.models.Model
+import org.acra.config.dialog
+import org.acra.data.StringFormat
+import org.acra.ktx.initAcra
 
-class SpotifyAuth : Application() {
+class MyApplication : Application() {
     lateinit var model: Model
 
     override fun onCreate() {
@@ -13,6 +17,19 @@ class SpotifyAuth : Application() {
         model = Model
         context = applicationContext
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
+    }
+
+    override fun attachBaseContext(base:Context) {
+        super.attachBaseContext(base)
+
+        initAcra {
+            buildConfigClass = BuildConfig::class.java
+            reportFormat = StringFormat.JSON
+
+            dialog {
+                reportDialogClass = ErrorDialog()::class.java
+            }
+        }
     }
 
     companion object {

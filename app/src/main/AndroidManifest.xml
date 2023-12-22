@@ -17,7 +17,8 @@
         android:theme="@style/Theme.MediaBrowserForSpotify"
         tools:ignore="AppLinkUrlError"
         tools:targetApi="31"
-        android:name=".SpotifyAuth">
+        android:name=".MyApplication">
+
         <activity android:name=".auth.SpotifyPkceLoginActivityImpl"
             android:launchMode="singleTop"
             android:exported="true"
@@ -63,6 +64,15 @@
             android:exported="true"
             android:theme="@style/Theme.MediaBrowserForSpotify">
         </activity>
+
+        <activity
+            android:name=".components.ErrorDialog"
+            android:exported="true"
+            android:theme="@android:style/Theme.Material.Dialog"
+            android:process=":acra"
+            android:excludeFromRecents="true"
+            android:finishOnTaskLaunch="true"
+            android:launchMode="singleInstance" />
 
         <meta-data
             android:name="com.google.android.gms.car.application"
