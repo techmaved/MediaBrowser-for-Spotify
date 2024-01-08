@@ -145,4 +145,7 @@ dependencies {
     ksp("dev.zacsweers.autoservice:auto-service-ksp:1.1.0")
     ksp("com.google.auto.service:auto-service:1.1.1")
     implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("com.mikepenz:iconics-core:5.4.0")
+    implementation("com.mikepenz:iconics-compose:5.4.0")
+    implementation("com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar")
 }

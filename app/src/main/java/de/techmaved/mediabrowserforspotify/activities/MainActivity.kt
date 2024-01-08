@@ -19,6 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import de.techmaved.mediabrowserforspotify.components.Authentication
 import de.techmaved.mediabrowserforspotify.components.Database
+import de.techmaved.mediabrowserforspotify.components.Info
 import de.techmaved.mediabrowserforspotify.components.MediaItems
 import de.techmaved.mediabrowserforspotify.components.SpotifyDesign
 import de.techmaved.mediabrowserforspotify.models.Model
@@ -69,6 +70,7 @@ fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Bo
         MediaItems().TextWithButtons(mediaItemCount, isAuthenticated)
         MediaItems().MirrorSection(isAuthenticated)
         SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
+        Info().getInfo()
     }
 }
 
