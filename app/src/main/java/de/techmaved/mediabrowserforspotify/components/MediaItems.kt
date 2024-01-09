@@ -1,5 +1,6 @@
 package de.techmaved.mediabrowserforspotify.components
 
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -7,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.twotone.Add
+import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -15,6 +18,7 @@ import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -46,20 +50,51 @@ class MediaItems {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Get data from spotify put it in cache and build media library",
+                text = "Add data from spotify put it in cache and build media library",
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp)
             )
 
-            var loading by remember { mutableStateOf(false) }
-            var isGetSongsButtonEnabled by remember { mutableStateOf(true) }
-            isGetSongsButtonEnabled = countState.value == 0
-
+            val loadingState = remember { mutableStateOf(false) }
+            val getSongsButtonEnabledState = remember { mutableStateOf(true) }
+            getSongsButtonEnabledState.value = countState.value == 0
             val scope = rememberCoroutineScope()
 
-            if (isAuthenticated) {
-                Button(onClick = {
-                    loading = true
-                    isGetSongsButtonEnabled = false
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                GetSongsButton(
+                    isAuthenticated = isAuthenticated,
+                    loadingState = loadingState,
+                    getSongsButtonEnabledState = getSongsButtonEnabledState,
+                    context = context,
+                    scope = scope,
+                    countState = countState
+                )
+
+                DeleteCacheButton(
+                    context = context,
+                    countState = countState,
+                    getSongsButtonEnabledState = getSongsButtonEnabledState
+                )
+            }
+        }
+    }
+
+    @Composable
+    fun GetSongsButton(
+        isAuthenticated: Boolean,
+        loadingState: MutableState<Boolean>,
+        getSongsButtonEnabledState: MutableState<Boolean>,
+        context: Context,
+        scope: CoroutineScope,
+        countState: MutableState<Int>
+    ) {
+        if (isAuthenticated) {
+            OutlinedButton(
+                onClick = {
+                    loadingState.value = true
+                    getSongsButtonEnabledState.value = false
 
                     scope.launch {
                         MediaItemTree.initialize()
@@ -73,36 +108,42 @@ class MediaItems {
                             MediaItemTree.buildFromCache(mediaItems)
                             countState.value = mediaItems.count()
                         }
-                        loading = false
+                        loadingState.value = false
                     }
-                }, enabled = isGetSongsButtonEnabled) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        if (loading) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(ButtonDefaults.IconSize),
-                                color = MaterialTheme.colorScheme.inversePrimary,
-                                strokeWidth = 2.dp
-                            )
-                        }
-
-                        Text("Get Songs")
-                    }
+                },
+                enabled = getSongsButtonEnabledState.value
+            ) {
+                if (loadingState.value) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(ButtonDefaults.IconSize),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(imageVector = Icons.TwoTone.Add, contentDescription = "Get songs")
                 }
             }
+        }
+    }
 
-            Button(onClick = {
+    @Composable
+    fun DeleteCacheButton(
+        context: Context,
+        countState: MutableState<Int>,
+        getSongsButtonEnabledState: MutableState<Boolean>
+    ) {
+        OutlinedButton(
+            onClick = {
                 CoroutineScope(Dispatchers.IO).launch {
                     val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
                     mediaItemDao.deleteAll()
                     countState.value = 0
-                    isGetSongsButtonEnabled = true
+                    getSongsButtonEnabledState.value = true
                 }
-            }, enabled = countState.value > 0) {
-                Text("Delete cache")
-            }
+            },
+            enabled = countState.value > 0,
+        ) {
+            Icon(imageVector = Icons.TwoTone.Delete, contentDescription = "Delete cache")
         }
     }
 
@@ -174,8 +215,12 @@ class MediaItems {
             AlertDialog(
                 onDismissRequest = { showDialog.value = false },
                 title = { Text("Futher explanation") },
-                text = { Text("Due to spotify limiting the liked songs in context you need to create a mirror of that" +
-                        "when you create or sync this mirror playlist gets created or updated with all you music") },
+                text = {
+                    Text(
+                        "Due to spotify limiting the liked songs in context you need to create a mirror of that" +
+                                "when you create or sync this mirror playlist gets created or updated with all you music"
+                    )
+                },
                 confirmButton = {
                 },
                 dismissButton = {
