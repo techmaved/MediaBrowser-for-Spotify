@@ -1,26 +1,15 @@
 package de.techmaved.mediabrowserforspotify.ui.components
 
+import android.annotation.SuppressLint
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material.icons.twotone.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -32,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import de.techmaved.mediabrowserforspotify.utils.AppDatabase
 import de.techmaved.mediabrowserforspotify.utils.MediaItemTree
 import de.techmaved.mediabrowserforspotify.utils.SpotifyWebApiService
@@ -69,6 +60,8 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
                 scope = scope,
                 countState = countState
             )
+
+            SelectButton(isAuthenticated = isAuthenticated)
 
             DeleteCacheButton(
                 context = context,
@@ -220,5 +213,101 @@ fun LikedSongsHelpDialog() {
                 }
             },
         )
+    }
+}
+
+@Composable
+fun SelectButton(
+    isAuthenticated: Boolean,
+) {
+    val dialogState = remember { mutableStateOf(false) }
+
+    if (isAuthenticated) {
+        OutlinedButton(
+            onClick = {
+                dialogState.value = true
+            }
+        ) {
+            Icon(imageVector = Icons.TwoTone.Edit, contentDescription = "Get songs")
+        }
+    }
+
+    SelectionDialog(dialogState = dialogState)
+}
+
+data class ChipItem(
+    val id: String,
+    val name: String,
+    val state: MutableState<Boolean>
+)
+
+@SuppressLint("UnrememberedMutableState")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SelectionDialog(dialogState: MutableState<Boolean>) {
+    val items: MutableList<ChipItem> = mutableListOf(ChipItem("124", "Test", mutableStateOf(false)))
+
+    if (!dialogState.value) {
+        Dialog(
+            properties = DialogProperties(usePlatformDefaultWidth = false),
+            onDismissRequest = {
+                dialogState.value = false
+            }
+        ){
+            Surface(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.padding(30.dp)
+                ) {
+                    Text(text = "Liked Songs")
+                    Row (
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        items.forEach { item: ChipItem ->
+                            val selected = item.state
+                            FilterChip(
+                                onClick = { selected.value = !selected.value },
+                                label = {
+                                    Text(item.name)
+                                },
+                                selected = selected.value,
+                                leadingIcon = if (selected.value) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Filled.Done,
+                                            contentDescription = "Done icon",
+                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                        )
+                                    }
+                                } else {
+                                    null
+                                },
+                            )
+                        }
+                    }
+                    Text(text = "Saved Albums")
+                    Row (
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+
+                    }
+                    Text(text = "Playlists")
+                    Row (
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("a")
+                        Text("a")
+                    }
+                    Text(text = "Podcasts")
+                    Row (
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Text("a")
+                        Text("a")
+                    }
+                }
+            }
+        }
     }
 }
