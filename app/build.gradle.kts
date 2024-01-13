@@ -148,4 +148,5 @@ dependencies {
     implementation("com.mikepenz:iconics-core:5.4.0")
     implementation("com.mikepenz:iconics-compose:5.4.0")
     implementation("com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 }
