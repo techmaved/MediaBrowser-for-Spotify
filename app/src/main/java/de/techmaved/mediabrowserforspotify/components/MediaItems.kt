@@ -97,17 +97,17 @@ class MediaItems {
                     getSongsButtonEnabledState.value = false
 
                     scope.launch {
+                        val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
+
                         MediaItemTree.initialize()
-                        MediaItemTree.populateMediaTree()
+                        MediaItemTree.populateMediaTree().collect {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                mediaItemDao.inset(it)
+                            }
 
-                        CoroutineScope(Dispatchers.IO).launch {
-                            val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
-
-                            mediaItemDao.insertAll(MediaItemTree.toBeSavedMediaItems)
-                            val mediaItems = mediaItemDao.getAll()
-                            MediaItemTree.buildFromCache(mediaItems)
-                            countState.value = mediaItems.count()
+                            countState.value += countState.value
                         }
+
                         loadingState.value = false
                     }
                 },

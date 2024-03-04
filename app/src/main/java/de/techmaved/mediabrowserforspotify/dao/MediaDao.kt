@@ -13,6 +13,9 @@ interface MediaDao {
     @Insert
     fun insertAll(mediaItems: List<MediaItem>)
 
+    @Insert
+    fun inset(mediaItem: MediaItem)
+
     @Query("DELETE FROM mediaitem")
     fun deleteAll()
 }
