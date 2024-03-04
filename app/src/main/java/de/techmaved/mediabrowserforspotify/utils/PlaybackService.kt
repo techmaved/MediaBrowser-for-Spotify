@@ -24,6 +24,7 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSourceBitmapLoader
+import androidx.media3.exoplayer.DefaultLoadControl
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.CacheBitmapLoader
 import androidx.media3.session.LibraryResult
@@ -44,9 +45,7 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
@@ -230,9 +229,14 @@ class PlaybackService : MediaLibraryService() {
 
     @SuppressLint("UnsafeOptInUsageError")
     private fun initializeSessionAndPlayer() {
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(2000, 5000, 1000, 1000)
+            .build()
+
         player =
             ExoPlayer.Builder(this)
                 .setAudioAttributes(AudioAttributes.DEFAULT, /* handleAudioFocus= */ true)
+                .setLoadControl(loadControl)
                 .build()
 
         mediaLibrarySession =
