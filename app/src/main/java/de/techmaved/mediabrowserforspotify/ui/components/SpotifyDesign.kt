@@ -1,4 +1,4 @@
-package de.techmaved.mediabrowserforspotify.components
+package de.techmaved.mediabrowserforspotify.ui.components
 
 import android.content.ActivityNotFoundException
 import android.content.Intent

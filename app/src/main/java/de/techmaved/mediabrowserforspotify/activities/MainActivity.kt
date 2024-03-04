@@ -17,12 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.techmaved.mediabrowserforspotify.components.AppBarWithContainer
-import de.techmaved.mediabrowserforspotify.components.Database
-import de.techmaved.mediabrowserforspotify.components.Info
-import de.techmaved.mediabrowserforspotify.components.MediaItems
-import de.techmaved.mediabrowserforspotify.components.SpotifyDesign
 import de.techmaved.mediabrowserforspotify.models.Model
+import de.techmaved.mediabrowserforspotify.ui.components.*
 import de.techmaved.mediabrowserforspotify.ui.theme.MediaBrowserForSpotifyTheme
 
 class MainActivity : ComponentActivity() {
@@ -65,11 +61,11 @@ fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Bo
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Database().MediaItemsInDatabase(mediaItemCount)
-            MediaItems().TextWithButtons(mediaItemCount, isAuthenticated)
-            MediaItems().MirrorSection(isAuthenticated)
+            MediaItemsDatabaseCounter(mediaItemCount)
+            TextWithButtons(mediaItemCount, isAuthenticated)
+            MirrorSection(isAuthenticated)
             SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
-            Info().getInfo()
+            SourceCodeLink()
         }
     }
 }
