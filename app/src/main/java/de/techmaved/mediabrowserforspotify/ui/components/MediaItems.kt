@@ -18,8 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
-import de.techmaved.mediabrowserforspotify.components.ChipItem
 import de.techmaved.mediabrowserforspotify.utils.AppDatabase
 import de.techmaved.mediabrowserforspotify.utils.MediaItemTree
 import de.techmaved.mediabrowserforspotify.utils.SpotifyWebApiService
@@ -234,7 +232,7 @@ fun SelectButton(
         }
     }
 
-    de.techmaved.mediabrowserforspotify.components.SelectionDialog(
+    SelectionDialog(
         dialogState = dialogState,
         getSongsLoadingState = getSongsLoadingState
     )
