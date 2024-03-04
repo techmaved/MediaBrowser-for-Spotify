@@ -1,5 +1,6 @@
 package de.techmaved.mediabrowserforspotify.utils
 
+import androidx.compose.runtime.mutableStateOf
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.PlayableUri
 import com.adamratzman.spotify.models.Playlist
@@ -11,6 +12,7 @@ import com.adamratzman.spotify.models.SimpleEpisode
 import com.adamratzman.spotify.models.SimplePlaylist
 import com.adamratzman.spotify.models.SimpleTrack
 import de.techmaved.mediabrowserforspotify.BuildConfig
+import de.techmaved.mediabrowserforspotify.ui.components.ChipItem
 
 class SpotifyWebApiService {
     val mirrorName = "Liked Songs Mirror"
@@ -201,6 +203,23 @@ class SpotifyWebApiService {
             }
         }
     }
+
+    suspend fun getParentItems(): MutableMap<String, List<ChipItem>> {
+        val chipStuff: MutableMap<String, List<ChipItem>> = mutableMapOf()
+        val savedAlbums = this.getSavedAlbums()
+        val playlists = this.getPlaylists("")
+        val shows = this.getSavedShows()
+
+        chipStuff["Liked Songs"] = generateSequence { ChipItem("id", "name", mutableStateOf(false)) }.take(1).toList()
+
+        chipStuff["Liked Songs"] = listOf(ChipItem("id", "Liked Songs", mutableStateOf(false)))
+        chipStuff["Albums"] = savedAlbums.map { ChipItem(it.album.id, it.album.name, mutableStateOf(false)) }
+        chipStuff["Playlists"] = playlists?.map { ChipItem(it.id, it.name, mutableStateOf(false)) }!!
+        chipStuff["Shows"] = shows.map { ChipItem(it.show.id, it.show.name, mutableStateOf(false)) }
+
+        return chipStuff
+    }
+
 
     private suspend fun getAllSavedTracks(): List<SavedTrack> {
         val tracks = mutableListOf<SavedTrack>()

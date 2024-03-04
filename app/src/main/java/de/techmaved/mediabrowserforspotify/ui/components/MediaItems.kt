@@ -3,6 +3,8 @@ package de.techmaved.mediabrowserforspotify.ui.components
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Info
@@ -10,25 +12,21 @@ import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material.icons.twotone.Delete
 import androidx.compose.material.icons.twotone.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import de.techmaved.mediabrowserforspotify.components.ChipItem
 import de.techmaved.mediabrowserforspotify.utils.AppDatabase
 import de.techmaved.mediabrowserforspotify.utils.MediaItemTree
 import de.techmaved.mediabrowserforspotify.utils.SpotifyWebApiService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
@@ -44,7 +42,7 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
             modifier = Modifier.padding(start = 16.dp, end = 16.dp)
         )
 
-        val loadingState = remember { mutableStateOf(false) }
+        val getSongsLoadingState = remember { mutableStateOf(false) }
         val getSongsButtonEnabledState = remember { mutableStateOf(true) }
         getSongsButtonEnabledState.value = countState.value == 0
         val scope = rememberCoroutineScope()
@@ -55,13 +53,16 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
         ) {
             GetSongsButton(
                 isAuthenticated = isAuthenticated,
-                loadingState = loadingState,
+                loadingState = getSongsLoadingState,
                 getSongsButtonEnabledState = getSongsButtonEnabledState,
                 scope = scope,
                 countState = countState
             )
 
-            SelectButton(isAuthenticated = isAuthenticated)
+            SelectButton(
+                isAuthenticated = isAuthenticated,
+                getSongsLoadingState = getSongsLoadingState
+            )
 
             DeleteCacheButton(
                 context = context,
@@ -219,6 +220,7 @@ fun LikedSongsHelpDialog() {
 @Composable
 fun SelectButton(
     isAuthenticated: Boolean,
+    getSongsLoadingState: MutableState<Boolean>
 ) {
     val dialogState = remember { mutableStateOf(false) }
 
@@ -232,7 +234,10 @@ fun SelectButton(
         }
     }
 
-    SelectionDialog(dialogState = dialogState)
+    de.techmaved.mediabrowserforspotify.components.SelectionDialog(
+        dialogState = dialogState,
+        getSongsLoadingState = getSongsLoadingState
+    )
 }
 
 data class ChipItem(
@@ -242,69 +247,115 @@ data class ChipItem(
 )
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun SelectionDialog(dialogState: MutableState<Boolean>) {
-    val items: MutableList<ChipItem> = mutableListOf(ChipItem("124", "Test", mutableStateOf(false)))
+fun SelectionDialog(
+    dialogState: MutableState<Boolean>,
+    getSongsLoadingState: MutableState<Boolean>
+) {
+    val updateRecord = emptyMap<String, Boolean>().toMutableMap()
+    val tes = mutableStateOf(emptyMap<String, List<ChipItem>>())
 
-    if (!dialogState.value) {
-        Dialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = {
-                dialogState.value = false
+    if (dialogState.value) {
+        val parentItemsLoadingState = remember { mutableStateOf(true) }
+
+        LaunchedEffect(Unit) {
+            withContext(Dispatchers.IO) {
+                tes.value = SpotifyWebApiService().getParentItems()
+                parentItemsLoadingState.value = false
             }
-        ){
-            Surface(
-                modifier = Modifier.fillMaxSize()
+        }
+
+        Dialog(
+            onDismissRequest = { dialogState.value = false }
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .fillMaxHeight(),
+                shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(30.dp)
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Text(text = "Liked Songs")
-                    Row (
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items.forEach { item: ChipItem ->
-                            val selected = item.state
-                            FilterChip(
-                                onClick = { selected.value = !selected.value },
-                                label = {
-                                    Text(item.name)
-                                },
-                                selected = selected.value,
-                                leadingIcon = if (selected.value) {
-                                    {
-                                        Icon(
-                                            imageVector = Icons.Filled.Done,
-                                            contentDescription = "Done icon",
-                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
-                                        )
-                                    }
-                                } else {
-                                    null
-                                },
+                    if (parentItemsLoadingState.value) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.fillMaxSize(0.3f),
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 4.dp
                             )
                         }
-                    }
-                    Text(text = "Saved Albums")
-                    Row (
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                    } else {
+                        LazyColumn {
+                            tes.value.forEach { (type, chipItems) ->
+                                item {
+                                    Text(type)
 
+                                    FlowRow(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        chipItems.forEach {
+                                            val selected = it.state
+                                            FilterChip(
+                                                onClick = {
+                                                    selected.value = !selected.value
+                                                    updateRecord[type] = selected.value
+                                                },
+                                                label = {
+                                                    Text(it.name)
+                                                },
+                                                selected = selected.value,
+                                                leadingIcon =
+                                                if (selected.value) {
+                                                    {
+                                                        Icon(
+                                                            imageVector = Icons.Filled.Done,
+                                                            contentDescription = "Done icon",
+                                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                        )
+                                                    }
+                                                } else {
+                                                    null
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-                    Text(text = "Playlists")
-                    Row (
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(5.dp),
+                        horizontalArrangement = Arrangement.End
                     ) {
-                        Text("a")
-                        Text("a")
-                    }
-                    Text(text = "Podcasts")
-                    Row (
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        Text("a")
-                        Text("a")
+                        TextButton(
+                            onClick = {
+                                dialogState.value = false
+                            }
+                        ) {
+                            Text("Cancel")
+                        }
+
+                        TextButton(
+                            onClick = {
+                                dialogState.value = false
+                                getSongsLoadingState.value = true
+                                // call stuff
+                            }
+                        ) {
+                            Text("Update selected in cache")
+                        }
                     }
                 }
             }
