@@ -30,6 +30,8 @@ import com.adamratzman.spotify.models.Track
 import com.google.common.collect.ImmutableList
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 
 /**
@@ -207,7 +209,7 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChildren(arrayOf(LIKED_SONG_ID, PLAYLIST_ID, ALBUM_ID, SHOW_ID))
     }
 
-    suspend fun populateMediaTree() {
+    suspend fun populateMediaTree(): Flow<de.techmaved.mediabrowserforspotify.entities.MediaItem> = flow {
         username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
 
         spotifyWebApiService.getPlaylists(username)?.forEach { simplePlaylist: SimplePlaylist ->
@@ -219,12 +221,14 @@ object MediaItemTree {
                             LIKED_SONG_ID,
                             simplePlaylist.uri.uri
                         )
+                        emit(toBeSavedMediaItems.last())
                     }
                 }
                 return@forEach
             }
 
             addBrowsableToTree(simplePlaylist.name, simplePlaylist.id, PLAYLIST_ID)
+            emit(toBeSavedMediaItems.last())
 
             spotifyWebApiService.getPlaylistTracks(simplePlaylist.id).forEach { playlistTrack: PlaylistTrack ->
                 playlistTrack.track?.asTrack?.let {
@@ -233,12 +237,14 @@ object MediaItemTree {
                         PLAYLIST_ID + simplePlaylist.id,
                         simplePlaylist.uri.uri
                     )
+                    emit(toBeSavedMediaItems.last())
                 }
             }
         }
 
         spotifyWebApiService.getSavedAlbums().forEach { savedAlbum: SavedAlbum ->
             addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_ID)
+            emit(toBeSavedMediaItems.last())
 
             spotifyWebApiService.getAlbumTracks(savedAlbum.album.id).forEach { simpleTrack: SimpleTrack ->
                 CoroutineScope(Dispatchers.IO).launch {
@@ -246,7 +252,9 @@ object MediaItemTree {
                         if (it != null) {
                             addNodeToTree(
                                 it,
-                                ALBUM_ID + savedAlbum.album.id, savedAlbum.album.uri.uri)
+                                ALBUM_ID + savedAlbum.album.id, savedAlbum.album.uri.uri
+                            )
+                            emit(toBeSavedMediaItems.last())
                         }
                     }
                 }
@@ -255,9 +263,11 @@ object MediaItemTree {
 
         spotifyWebApiService.getSavedShows().forEach { savedShow: SavedShow ->
             addBrowsableToTree(savedShow.show.name, savedShow.show.id, SHOW_ID)
+            emit(toBeSavedMediaItems.last())
 
             spotifyWebApiService.getShowEpisodes(savedShow.show.id).forEach { simpleEpisode: SimpleEpisode ->
                 addEpisodeNodeToTree(simpleEpisode, SHOW_ID + savedShow.show.id, savedShow.show.uri.uri)
+                emit(toBeSavedMediaItems.last())
             }
         }
     }
@@ -283,7 +293,7 @@ object MediaItemTree {
     private fun addNodeToTree(mediaItem: Track, parentId: String, contextUri: String) {
         val id = mediaItem.id
         val title = mediaItem.name
-        val artist = mediaItem.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+        val artist = mediaItem.artists.joinToString(", ") { artistSimple -> artistSimple.name.toString() }
         val genre = ""
         val sourceUri = Uri.parse(mediaItem.uri.uri)
         val imageUri = Uri.parse(contextUri)
