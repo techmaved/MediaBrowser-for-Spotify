@@ -102,9 +102,8 @@ fun GetSongsButton(
                     MediaItemTree.populateMediaTree().collect {
                         CoroutineScope(Dispatchers.IO).launch {
                             mediaItemDao.inset(it)
+                            countState.value++
                         }
-
-                        countState.value += countState.value
                     }
 
                     loadingState.value = false
