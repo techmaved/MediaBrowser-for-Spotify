@@ -7,7 +7,7 @@ import de.techmaved.mediabrowserforspotify.entities.MediaItem
 
 @Dao
 interface MediaDao {
-    @Query("SELECT * FROM mediaitem")
+    @Query("SELECT * FROM mediaItem")
     fun getAll(): List<MediaItem>
 
     @Insert
@@ -16,6 +16,6 @@ interface MediaDao {
     @Insert
     fun inset(mediaItem: MediaItem)
 
-    @Query("DELETE FROM mediaitem")
+    @Query("DELETE FROM mediaItem")
     fun deleteAll()
 }
