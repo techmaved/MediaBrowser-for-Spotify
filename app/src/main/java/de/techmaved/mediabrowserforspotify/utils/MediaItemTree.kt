@@ -26,15 +26,13 @@ import com.adamratzman.spotify.models.SavedShow
 import com.adamratzman.spotify.models.SimpleEpisode
 import com.adamratzman.spotify.models.SimplePlaylist
 import com.adamratzman.spotify.models.SimpleTrack
-import com.adamratzman.spotify.models.Track
 import com.google.common.collect.ImmutableList
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import de.techmaved.mediabrowserforspotify.MyApplication
+import de.techmaved.mediabrowserforspotify.entities.Browsable
+import de.techmaved.mediabrowserforspotify.entities.BrowsableWithMediaItems
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 
 /**
  * A sample media catalog that represents media items as a tree.
@@ -46,18 +44,17 @@ import kotlinx.coroutines.launch
  * demonstration purpose only.
  */
 object MediaItemTree {
-    var toBeSavedMediaItems: MutableList<de.techmaved.mediabrowserforspotify.entities.MediaItem> = mutableListOf()
     private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
     private var titleMap: MutableMap<String, MediaItemNode> = mutableMapOf()
     private var isInitialized = false
     private const val ROOT_ID = "[rootID]"
     private const val LIKED_SONG_ID = "[likedSongID]"
     private const val ALBUM_ID = "[albumID]"
-    private const val ITEM_PREFIX = "[item]"
     private const val PLAYLIST_ID = "[playlistId]"
     private const val SHOW_ID = "[showId]"
     private var username: String? = ""
     private val spotifyWebApiService = SpotifyWebApiService()
+    private val database = AppDatabase.getDatabase(MyApplication.context)
 
     private class MediaItemNode(val item: MediaItem) {
         private val children: MutableList<MediaItem> = ArrayList()
@@ -74,45 +71,6 @@ object MediaItemTree {
 
         fun getChildren(): List<MediaItem> {
             return ImmutableList.copyOf(children)
-        }
-    }
-
-    fun buildFromCache(mediaItems: List<de.techmaved.mediabrowserforspotify.entities.MediaItem>) {
-        createInitialMediaTree()
-
-        mediaItems.forEach { mediaItem: de.techmaved.mediabrowserforspotify.entities.MediaItem ->
-            val idInTree = mediaItem.mediaId
-
-            if (mediaItem.isBrowsable == true) {
-                treeNodes[idInTree] =
-                MediaItemNode(
-                    buildMediaItem(
-                        title = mediaItem.title,
-                        mediaId = idInTree,
-                        isPlayable = false,
-                        isBrowsable = true,
-                        mediaType = MediaMetadata.MEDIA_TYPE_PLAYLIST
-                    )
-                )
-            } else {
-                treeNodes[idInTree] =
-                    MediaItemNode(
-                        buildMediaItem(
-                            title = mediaItem.title,
-                            mediaId = mediaItem.mediaId,
-                            isPlayable = true,
-                            isBrowsable = false,
-                            mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
-                            album = null,
-                            artist = mediaItem.artist,
-                            genre = "",
-                            sourceUri = Uri.parse(mediaItem.source),
-                            imageUri = Uri.parse(mediaItem.context)
-                        )
-                    )
-            }
-
-            treeNodes[mediaItem.parent]!!.addChild(idInTree)
         }
     }
 
@@ -211,52 +169,146 @@ object MediaItemTree {
         treeNodes[ROOT_ID]!!.addChildren(arrayOf(LIKED_SONG_ID, PLAYLIST_ID, ALBUM_ID, SHOW_ID))
     }
 
-    suspend fun populateMediaTree(): Flow<de.techmaved.mediabrowserforspotify.entities.MediaItem> = channelFlow {
+    fun buildFromCache(browsablesWithMediaItems: List<BrowsableWithMediaItems>) {
+        createInitialMediaTree()
+
+        browsablesWithMediaItems
+            .forEach { browsableWithMediaItems: BrowsableWithMediaItems ->
+                treeNodes[browsableWithMediaItems.browsable.uri.toString()] =
+                    MediaItemNode(
+                        buildMediaItem(
+                            title = browsableWithMediaItems.browsable.name,
+                            mediaId = browsableWithMediaItems.browsable.uri.toString(),
+                            isPlayable = false,
+                            isBrowsable = true,
+                            mediaType = MediaMetadata.MEDIA_TYPE_PLAYLIST
+                        )
+                    )
+
+                if (browsableWithMediaItems.browsable.type != LIKED_SONG_ID) {
+                    treeNodes[browsableWithMediaItems.browsable.type]!!.addChild(browsableWithMediaItems.browsable.uri.toString())
+                }
+
+                browsableWithMediaItems.mediaItems.forEach { mediaItem: de.techmaved.mediabrowserforspotify.entities.MediaItem ->
+                    treeNodes[mediaItem.uri.toString()] =
+                        MediaItemNode(
+                            buildMediaItem(
+                                title = mediaItem.title,
+                                mediaId = mediaItem.uri.toString(),
+                                isPlayable = true,
+                                isBrowsable = false,
+                                mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
+                                album = null,
+                                artist = mediaItem.artist,
+                                genre = "",
+                                sourceUri = mediaItem.uri,
+                                imageUri = mediaItem.browsableUri
+                            )
+                        )
+
+                    // add songs from liked songs mirror to node
+                    if (browsableWithMediaItems.browsable.type != LIKED_SONG_ID) {
+                        treeNodes[browsableWithMediaItems.browsable.uri.toString()]!!.addChild(mediaItem.uri.toString())
+                    } else {
+                        treeNodes[LIKED_SONG_ID]!!.addChild(mediaItem.uri.toString())
+                    }
+                }
+            }
+    }
+
+    private fun insertBrowsable(uri: String, name: String, type: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            database.browsableDao().inset(
+                Browsable(
+                    uri = Uri.parse(uri),
+                    name = name,
+                    type = type
+                )
+            )
+        }
+    }
+
+    private fun insertMediaItem(uri: String, browsableUri: String, title: String, artists: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            database.mediaDao().inset(
+                de.techmaved.mediabrowserforspotify.entities.MediaItem(
+                    uri = Uri.parse(uri),
+                    browsableUri = Uri.parse(browsableUri),
+                    title = title,
+                    artist = artists
+                )
+            )
+        }
+    }
+
+    suspend fun populateMediaTree(): Flow<Unit> = channelFlow {
         username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
 
         spotifyWebApiService.getPlaylists(username)?.forEach { simplePlaylist: SimplePlaylist ->
             if (simplePlaylist.name == spotifyWebApiService.mirrorName) {
+                insertBrowsable(
+                    uri = simplePlaylist.uri.uri,
+                    name = simplePlaylist.name,
+                    type = LIKED_SONG_ID
+                )
+
+                send(Unit)
+
                 spotifyWebApiService.getPlaylistTracks(simplePlaylist.id).forEach { playlistTrack: PlaylistTrack ->
                     playlistTrack.track?.asTrack?.let {
-                        addNodeToTree(
-                            it,
-                            LIKED_SONG_ID,
-                            simplePlaylist.uri.uri
+                        insertMediaItem(
+                            uri = it.uri.uri,
+                            browsableUri = simplePlaylist.uri.uri,
+                            title = it.name,
+                            artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name }
                         )
-                        send(toBeSavedMediaItems.last())
+                        send(Unit)
                     }
                 }
                 return@forEach
             }
 
-            addBrowsableToTree(simplePlaylist.name, simplePlaylist.id, PLAYLIST_ID)
-            send(toBeSavedMediaItems.last())
+            insertBrowsable(
+                uri = simplePlaylist.uri.uri,
+                name = simplePlaylist.name,
+                type = PLAYLIST_ID
+            )
+            send(Unit)
 
             spotifyWebApiService.getPlaylistTracks(simplePlaylist.id).forEach { playlistTrack: PlaylistTrack ->
                 playlistTrack.track?.asTrack?.let {
-                    addNodeToTree(
-                        it,
-                        PLAYLIST_ID + simplePlaylist.id,
-                        simplePlaylist.uri.uri
+                    insertMediaItem(
+                        uri = it.uri.uri,
+                        browsableUri = simplePlaylist.uri.uri,
+                        title = it.name,
+                        artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name }
                     )
-                    send(toBeSavedMediaItems.last())
+                    send(Unit)
                 }
             }
         }
 
         spotifyWebApiService.getSavedAlbums().forEach { savedAlbum: SavedAlbum ->
-            addBrowsableToTree(savedAlbum.album.name, savedAlbum.album.id, ALBUM_ID)
-            send(toBeSavedMediaItems.last())
+            insertBrowsable(
+                uri = savedAlbum.album.uri.uri,
+                name = savedAlbum.album.name,
+                type = ALBUM_ID
+            )
+
+            send(Unit)
 
             spotifyWebApiService.getAlbumTracks(savedAlbum.album.id).forEach { simpleTrack: SimpleTrack ->
                 CoroutineScope(Dispatchers.IO).launch {
                     simpleTrack.toFullTrack().let {
                         if (it != null) {
-                            addNodeToTree(
-                                it,
-                                ALBUM_ID + savedAlbum.album.id, savedAlbum.album.uri.uri
+                            insertMediaItem(
+                                uri = it.uri.uri,
+                                browsableUri = savedAlbum.album.uri.uri,
+                                title = it.name,
+                                artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name }
                             )
-                            send(toBeSavedMediaItems.last())
+
+                            send(Unit)
                         }
                     }
                 }
@@ -264,104 +316,25 @@ object MediaItemTree {
         }
 
         spotifyWebApiService.getSavedShows().forEach { savedShow: SavedShow ->
-            addBrowsableToTree(savedShow.show.name, savedShow.show.id, SHOW_ID)
-            send(toBeSavedMediaItems.last())
+            insertBrowsable(
+                uri = savedShow.show.uri.uri,
+                name = savedShow.show.name,
+                type = SHOW_ID
+            )
+
+            send(Unit)
 
             spotifyWebApiService.getShowEpisodes(savedShow.show.id).forEach { simpleEpisode: SimpleEpisode ->
-                addEpisodeNodeToTree(simpleEpisode, SHOW_ID + savedShow.show.id, savedShow.show.uri.uri)
-                send(toBeSavedMediaItems.last())
+                insertMediaItem(
+                    uri = simpleEpisode.uri.uri,
+                    browsableUri = savedShow.show.uri.uri,
+                    title = simpleEpisode.name,
+                    artists = savedShow.show.name
+                )
+
+                send(Unit)
             }
         }
-    }
-
-    private fun addBrowsableToTree(name: String, id: String, parentId: String) {
-        val idInTree = parentId + id
-
-        treeNodes[idInTree] =
-            MediaItemNode(
-                buildMediaItem(
-                    title = name,
-                    mediaId = idInTree,
-                    isPlayable = false,
-                    isBrowsable = true,
-                    mediaType = MediaMetadata.MEDIA_TYPE_PLAYLIST
-                )
-            )
-
-        titleMap[name.lowercase()] = treeNodes[idInTree]!!
-        addToBeSavedMediaItems(treeNodes[idInTree]!!.item, parentId)
-    }
-
-    private fun addNodeToTree(mediaItem: Track, parentId: String, contextUri: String) {
-        val id = mediaItem.id
-        val title = mediaItem.name
-        val artist = mediaItem.artists.joinToString(", ") { artistSimple -> artistSimple.name.toString() }
-        val genre = ""
-        val sourceUri = Uri.parse(mediaItem.uri.uri)
-        val imageUri = Uri.parse(contextUri)
-        val idInTree = ITEM_PREFIX + id + parentId
-
-        treeNodes[idInTree] =
-            MediaItemNode(
-                buildMediaItem(
-                    title = title,
-                    mediaId = idInTree,
-                    isPlayable = true,
-                    isBrowsable = false,
-                    mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
-                    album = null,
-                    artist = artist,
-                    genre = genre,
-                    sourceUri = sourceUri,
-                    imageUri = imageUri
-                )
-            )
-
-        titleMap[title.lowercase()] = treeNodes[idInTree]!!
-        addToBeSavedMediaItems(treeNodes[idInTree]!!.item, parentId)
-    }
-
-    private fun addEpisodeNodeToTree(episode: SimpleEpisode, parentId: String, contextUri: String) {
-        val id = episode.id
-        val title = episode.name
-        val artist = ""
-        val genre = ""
-        val sourceUri = Uri.parse(episode.uri.uri)
-        val imageUri = Uri.parse(contextUri)
-        val idInTree = ITEM_PREFIX + id + parentId
-
-        treeNodes[idInTree] =
-            MediaItemNode(
-                buildMediaItem(
-                    title = title,
-                    mediaId = idInTree,
-                    isPlayable = true,
-                    isBrowsable = false,
-                    mediaType = MediaMetadata.MEDIA_TYPE_MUSIC,
-                    album = null,
-                    artist = artist,
-                    genre = genre,
-                    sourceUri = sourceUri,
-                    imageUri = imageUri
-                )
-            )
-
-        titleMap[title.lowercase()] = treeNodes[idInTree]!!
-        addToBeSavedMediaItems(treeNodes[idInTree]!!.item, parentId)
-    }
-
-    private fun addToBeSavedMediaItems(mediaItem: MediaItem, parentId: String) {
-        val dbMediaItem = de.techmaved.mediabrowserforspotify.entities.MediaItem(
-            mediaId = mediaItem.mediaId,
-            title = mediaItem.mediaMetadata.title.toString(),
-            artist = mediaItem.mediaMetadata.artist.toString(),
-            source = mediaItem.localConfiguration?.uri.toString(),
-            context = mediaItem.mediaMetadata.artworkUri.toString(),
-            parent = parentId,
-            isBrowsable = mediaItem.mediaMetadata.isBrowsable
-        )
-
-        toBeSavedMediaItems.add(dbMediaItem)
     }
 
     fun getItem(id: String): MediaItem? {
@@ -374,18 +347,5 @@ object MediaItemTree {
 
     fun getChildren(id: String): List<MediaItem>? {
         return treeNodes[id]?.getChildren()
-    }
-
-    fun getRandomItem(): MediaItem {
-        var curRoot = getRootItem()
-        while (curRoot.mediaMetadata.isBrowsable == true) {
-            val children = getChildren(curRoot.mediaId)!!
-            curRoot = children.random()
-        }
-        return curRoot
-    }
-
-    fun getItemFromTitle(title: String): MediaItem? {
-        return titleMap[title]?.item
     }
 }
