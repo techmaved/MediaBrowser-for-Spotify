@@ -66,7 +66,6 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
                 isAuthenticated = isAuthenticated,
                 loadingState = loadingState,
                 getSongsButtonEnabledState = getSongsButtonEnabledState,
-                context = context,
                 scope = scope,
                 countState = countState
             )
@@ -85,7 +84,6 @@ fun GetSongsButton(
     isAuthenticated: Boolean,
     loadingState: MutableState<Boolean>,
     getSongsButtonEnabledState: MutableState<Boolean>,
-    context: Context,
     scope: CoroutineScope,
     countState: MutableState<Int>
 ) {
@@ -96,14 +94,9 @@ fun GetSongsButton(
                 getSongsButtonEnabledState.value = false
 
                 scope.launch {
-                    val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
-
                     MediaItemTree.initialize()
                     MediaItemTree.populateMediaTree().collect {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            mediaItemDao.inset(it)
-                            countState.value++
-                        }
+                        countState.value++
                     }
 
                     loadingState.value = false
@@ -133,8 +126,8 @@ fun DeleteCacheButton(
     OutlinedButton(
         onClick = {
             CoroutineScope(Dispatchers.IO).launch {
-                val mediaItemDao = AppDatabase.getDatabase(context).mediaDao()
-                mediaItemDao.deleteAll()
+                AppDatabase.getDatabase(context).mediaDao().deleteAll()
+                AppDatabase.getDatabase(context).browsableDao().deleteAll()
                 countState.value = 0
                 getSongsButtonEnabledState.value = true
             }

@@ -121,9 +121,11 @@ class PlaybackService : MediaLibraryService() {
         init {
             CoroutineScope(Dispatchers.IO).launch {
                 Log.d(TAG, "building media item tree from cache")
-                val mediaItemDao = AppDatabase.getDatabase(this@PlaybackService).mediaDao()
-                val mediaItems = mediaItemDao.getAll()
-                MediaItemTree.buildFromCache(mediaItems)
+                MediaItemTree.buildFromCache(
+                    AppDatabase.getDatabase(this@PlaybackService)
+                        .browsableDao()
+                        .getBrowsablesWithMediaItems()
+                )
             }
         }
 
