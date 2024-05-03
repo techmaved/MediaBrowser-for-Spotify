@@ -5,7 +5,8 @@ import androidx.room.*
 
 @Entity(tableName = "mediaItem")
 data class MediaItem(
-    @PrimaryKey val uri: Uri,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @ColumnInfo(name = "uri") val uri: Uri,
     @ColumnInfo(name = "browsableUri") val browsableUri: Uri,
     @ColumnInfo(name = "name") val title: String,
     @ColumnInfo(name = "artist") val artist: String,
@@ -13,7 +14,8 @@ data class MediaItem(
 
 @Entity(tableName = "browsable")
 data class Browsable(
-    @PrimaryKey val uri: Uri,
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @ColumnInfo(name = "uri") val uri: Uri,
     @ColumnInfo(name = "name") val name: String,
     @ColumnInfo(name = "type") val type: String
 )
