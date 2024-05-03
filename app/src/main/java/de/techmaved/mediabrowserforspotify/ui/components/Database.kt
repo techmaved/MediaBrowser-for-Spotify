@@ -23,8 +23,8 @@ fun MediaItemsDatabaseCounter(countState: MutableState<Int>) {
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             val database = AppDatabase.getDatabase(context)
-            countState.value = database.mediaDao().getAll().count()
-            countState.value += database.browsableDao().getAll().count()
+            countState.value = database.mediaDao().getCount()
+            countState.value += database.browsableDao().getCount()
         }
     }
 

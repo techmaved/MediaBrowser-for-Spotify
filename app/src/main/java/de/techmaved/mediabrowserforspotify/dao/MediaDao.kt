@@ -18,4 +18,7 @@ interface MediaDao {
 
     @Query("DELETE FROM mediaItem")
     fun deleteAll()
+
+    @Query("SELECT COUNT(uri) FROM mediaItem")
+    fun getCount(): Int
 }

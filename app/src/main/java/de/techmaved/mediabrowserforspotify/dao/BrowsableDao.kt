@@ -24,4 +24,7 @@ interface BrowsableDao {
 
     @Query("DELETE FROM browsable")
     fun deleteAll()
+
+    @Query("SELECT COUNT(uri) FROM browsable")
+    fun getCount(): Int
 }
