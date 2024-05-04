@@ -2,15 +2,7 @@ package de.techmaved.mediabrowserforspotify.utils
 
 import androidx.compose.runtime.mutableStateOf
 import com.adamratzman.spotify.SpotifyClientApi
-import com.adamratzman.spotify.models.PlayableUri
-import com.adamratzman.spotify.models.Playlist
-import com.adamratzman.spotify.models.PlaylistTrack
-import com.adamratzman.spotify.models.SavedAlbum
-import com.adamratzman.spotify.models.SavedShow
-import com.adamratzman.spotify.models.SavedTrack
-import com.adamratzman.spotify.models.SimpleEpisode
-import com.adamratzman.spotify.models.SimplePlaylist
-import com.adamratzman.spotify.models.SimpleTrack
+import com.adamratzman.spotify.models.*
 import de.techmaved.mediabrowserforspotify.BuildConfig
 import de.techmaved.mediabrowserforspotify.ui.components.ChipItem
 
@@ -132,22 +124,17 @@ class SpotifyWebApiService {
         return episodes
     }
 
-    suspend fun handleMirror() {
-        val username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
-        val userPlaylists = getPlaylists(username)
+    suspend fun handleMirror(userName: String) {
+        val mirror = getLikedSongsMirror(userName)
 
-        val mirror = userPlaylists?.filter { simplePlaylist: SimplePlaylist ->
-            simplePlaylist.name == mirrorName || simplePlaylist.description == mirrorDescription
-        }
-
-        if (mirror?.isEmpty() == true) {
+        if (mirror == null) {
             val playlist: Playlist? = guardValidSpotifyApi { api: SpotifyClientApi ->
                 api.playlists.createClientPlaylist(
                     mirrorName,
                     mirrorDescription,
                     public = false,
                     collaborative = false,
-                    user = username
+                    user = userName
                 )
             }
 
@@ -168,58 +155,67 @@ class SpotifyWebApiService {
             return
         }
 
-        mirror?.get(0).let { playlist: SimplePlaylist? ->
-            val savedSongs: List<PlayableUri> = getAllSavedTracks().map { it.track.uri }
+        val savedSongs: List<PlayableUri> = getAllSavedTracks().map { it.track.uri }
+        val playlistTracks: List<PlayableUri?> = getPlaylistTracks(mirror.id).map { it.track?.uri }
+        val toAddToMirrorPlaylistChunked =
+            playlistTracks.let { savedSongs.minus(it.toHashSet()) }.chunked(100)
 
-            val playlistTracks: List<PlayableUri?>? = playlist?.id?.let {
-                getPlaylistTracks(it)
-            }?.map {
-                it.track?.uri
+        val toRemoveFromMirrorPlaylistChunked = playlistTracks.minus(savedSongs.toHashSet())
+            .chunked(100)
+
+        toAddToMirrorPlaylistChunked.forEach { playableUris: List<PlayableUri?> ->
+            guardValidSpotifyApi { api: SpotifyClientApi ->
+                api.playlists.addPlayablesToClientPlaylist(
+                    playlist = mirror.id,
+                    playables = playableUris.filterNotNull().toTypedArray(),
+                    position = 0
+                )
             }
+        }
 
-            val toAddToMirrorPlaylistChunked =
-                playlistTracks?.let { savedSongs.minus(it.toHashSet()) }?.chunked(100)
-
-            val toRemoveFromMirrorPlaylistChunked = playlistTracks?.minus(savedSongs.toHashSet())
-                ?.chunked(100)
-
-            toAddToMirrorPlaylistChunked?.forEach { playableUris: List<PlayableUri?> ->
-                guardValidSpotifyApi { api: SpotifyClientApi ->
-                    api.playlists.addPlayablesToClientPlaylist(
-                        playlist = playlist.id,
-                        playables = playableUris.filterNotNull().toTypedArray(),
-                        position = 0
-                    )
-                }
-            }
-
-            toRemoveFromMirrorPlaylistChunked?.forEach { playableUris: List<PlayableUri?> ->
-                guardValidSpotifyApi { api: SpotifyClientApi ->
-                    api.playlists.removePlayablesFromClientPlaylist(
-                        playlist = playlist.id,
-                        playables = playableUris.filterNotNull().toTypedArray(),
-                    )
-                }
+        toRemoveFromMirrorPlaylistChunked.forEach { playableUris: List<PlayableUri?> ->
+            guardValidSpotifyApi { api: SpotifyClientApi ->
+                api.playlists.removePlayablesFromClientPlaylist(
+                    playlist = mirror.id,
+                    playables = playableUris.filterNotNull().toTypedArray(),
+                )
             }
         }
     }
 
-    suspend fun getParentItems(): MutableMap<String, List<ChipItem>> {
-        val chipStuff: MutableMap<String, List<ChipItem>> = mutableMapOf()
+    suspend fun getParentItems(userName: String): MutableMap<String, List<ChipItem>> {
+        val chipItems: MutableMap<String, List<ChipItem>> = mutableMapOf()
         val savedAlbums = this.getSavedAlbums()
-        val playlists = this.getPlaylists("")
+        val playlists = this.getPlaylists(userName)
         val shows = this.getSavedShows()
+        val likedSongsMirror = this.getLikedSongsMirror(userName)
 
-        chipStuff["Liked Songs"] = generateSequence { ChipItem("id", "name", mutableStateOf(false)) }.take(1).toList()
+        if (likedSongsMirror != null) {
+            chipItems[ChipType.LIKED_SONGS] = listOf(ChipItem(likedSongsMirror.id, "Liked Songs", mutableStateOf(false)))
+        }
 
-        chipStuff["Liked Songs"] = listOf(ChipItem("id", "Liked Songs", mutableStateOf(false)))
-        chipStuff["Albums"] = savedAlbums.map { ChipItem(it.album.id, it.album.name, mutableStateOf(false)) }
-        chipStuff["Playlists"] = playlists?.map { ChipItem(it.id, it.name, mutableStateOf(false)) }!!
-        chipStuff["Shows"] = shows.map { ChipItem(it.show.id, it.show.name, mutableStateOf(false)) }
+        chipItems[ChipType.ALBUMS] = savedAlbums.map { ChipItem(it.album.id, it.album.name, mutableStateOf(false)) }
+        chipItems[ChipType.PLAYLISTS] = playlists?.map { ChipItem(it.id, it.name, mutableStateOf(false)) }!!
+        chipItems[ChipType.SHOWS] = shows.map { ChipItem(it.show.id, it.show.name, mutableStateOf(false)) }
 
-        return chipStuff
+        return chipItems
     }
 
+    suspend fun getLikedSongsMirror(userName: String?): SimplePlaylist? {
+        if (userName == null) {
+            return null
+        }
+
+        val playlist = getPlaylists(userName)?.filter { simplePlaylist: SimplePlaylist ->
+            simplePlaylist.name == mirrorName || simplePlaylist.description == mirrorDescription
+        }
+
+        if (playlist?.isNotEmpty() == true) {
+            return playlist[0]
+        }
+
+        return null
+    }
 
     private suspend fun getAllSavedTracks(): List<SavedTrack> {
         val tracks = mutableListOf<SavedTrack>()
