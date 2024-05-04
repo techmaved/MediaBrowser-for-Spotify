@@ -18,9 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import de.techmaved.mediabrowserforspotify.utils.AppDatabase
-import de.techmaved.mediabrowserforspotify.utils.MediaItemTree
-import de.techmaved.mediabrowserforspotify.utils.SpotifyWebApiService
+import de.techmaved.mediabrowserforspotify.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +57,8 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
 
             SelectButton(
                 isAuthenticated = isAuthenticated,
-                getSongsLoadingState = getSongsLoadingState
+                getSongsLoadingState = getSongsLoadingState,
+                countState = countState
             )
 
             DeleteCacheButton(
@@ -79,6 +78,10 @@ fun GetSongsButton(
     scope: CoroutineScope,
     countState: MutableState<Int>
 ) {
+    val context = LocalContext.current
+    val store = Store(context)
+    val userName = store.getUserName.collectAsState(initial = "")
+
     if (isAuthenticated) {
         OutlinedButton(
             onClick = {
@@ -87,7 +90,7 @@ fun GetSongsButton(
 
                 scope.launch {
                     MediaItemTree.initialize()
-                    MediaItemTree.populateMediaTree().collect {
+                    MediaItemTree.populateMediaTree(userName.value).collect {
                         countState.value++
                     }
 
@@ -136,6 +139,10 @@ fun MirrorSection(isAuthenticated: Boolean) {
     val scope = rememberCoroutineScope()
 
     if (isAuthenticated) {
+        val context = LocalContext.current
+        val store = Store(context)
+        val userName = store.getUserName.collectAsState(initial = "")
+
         Text(
             text = "Create or sync mirror of liked songs",
             modifier = Modifier.padding(start = 16.dp, end = 16.dp)
@@ -148,7 +155,7 @@ fun MirrorSection(isAuthenticated: Boolean) {
             Button(onClick = {
                 loading = true
                 scope.launch {
-                    SpotifyWebApiService().handleMirror()
+                    SpotifyWebApiService().handleMirror(userName.value)
                     loading = false
                 }
             }, enabled = !loading) {
@@ -218,7 +225,8 @@ fun LikedSongsHelpDialog() {
 @Composable
 fun SelectButton(
     isAuthenticated: Boolean,
-    getSongsLoadingState: MutableState<Boolean>
+    getSongsLoadingState: MutableState<Boolean>,
+    countState: MutableState<Int>
 ) {
     val dialogState = remember { mutableStateOf(false) }
 
@@ -234,7 +242,8 @@ fun SelectButton(
 
     SelectionDialog(
         dialogState = dialogState,
-        getSongsLoadingState = getSongsLoadingState
+        getSongsLoadingState = getSongsLoadingState,
+        countState = countState
     )
 }
 
@@ -245,21 +254,25 @@ data class ChipItem(
 )
 
 @SuppressLint("UnrememberedMutableState")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SelectionDialog(
     dialogState: MutableState<Boolean>,
-    getSongsLoadingState: MutableState<Boolean>
+    getSongsLoadingState: MutableState<Boolean>,
+    countState: MutableState<Int>
 ) {
-    val updateRecord = emptyMap<String, Boolean>().toMutableMap()
+    val updateRecord = emptyMap<String, MutableList<String>>().toMutableMap()
     val tes = mutableStateOf(emptyMap<String, List<ChipItem>>())
+    val context = LocalContext.current
+    val store = Store(context)
+    val userName = store.getUserName.collectAsState(initial = "")
 
     if (dialogState.value) {
         val parentItemsLoadingState = remember { mutableStateOf(true) }
 
         LaunchedEffect(Unit) {
             withContext(Dispatchers.IO) {
-                tes.value = SpotifyWebApiService().getParentItems()
+                tes.value = SpotifyWebApiService().getParentItems(userName.value)
                 parentItemsLoadingState.value = false
             }
         }
@@ -277,8 +290,7 @@ fun SelectionDialog(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
+                        .padding(16.dp)
                 ) {
                     if (parentItemsLoadingState.value) {
                         Column(
@@ -307,7 +319,12 @@ fun SelectionDialog(
                                             FilterChip(
                                                 onClick = {
                                                     selected.value = !selected.value
-                                                    updateRecord[type] = selected.value
+
+                                                    if (updateRecord[type] != null) {
+                                                        updateRecord[type]?.add(it.id)
+                                                    } else {
+                                                        updateRecord[type] = mutableListOf(it.id)
+                                                    }
                                                 },
                                                 label = {
                                                     Text(it.name)
@@ -330,29 +347,40 @@ fun SelectionDialog(
                                     }
                                 }
                             }
-                        }
-                    }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(5.dp),
-                        horizontalArrangement = Arrangement.End
-                    ) {
-                        TextButton(
-                            onClick = {
-                                dialogState.value = false
-                            }
-                        ) {
-                            Text("Cancel")
-                        }
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(5.dp),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(
+                                        onClick = {
+                                            dialogState.value = false
+                                        }
+                                    ) {
+                                        Text("Cancel")
+                                    }
 
-                        TextButton(
-                            onClick = {
-                                dialogState.value = false
-                                getSongsLoadingState.value = true
-                                // call stuff
+                                    TextButton(
+                                        onClick = {
+                                            dialogState.value = false
+                                            getSongsLoadingState.value = true
+                                            
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                doPartUpdate(updateRecord, userName.value).collect {
+                                                    countState.value += it
+                                                }
+
+                                                getSongsLoadingState.value = false
+                                            }
+                                        }
+                                    ) {
+                                        Text("Update selected in cache")
+                                    }
+                                }
                             }
-                        ) {
-                            Text("Update selected in cache")
                         }
                     }
                 }

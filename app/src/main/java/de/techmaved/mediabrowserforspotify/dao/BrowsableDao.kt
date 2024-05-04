@@ -1,5 +1,6 @@
 package de.techmaved.mediabrowserforspotify.dao
 
+import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -16,6 +17,9 @@ interface BrowsableDao {
     @Query("SELECT * FROM browsable")
     fun getAll(): List<Browsable>
 
+    @Query("SELECT * FROM browsable WHERE uri = :uri")
+    fun getBrowsable(uri: Uri): Browsable?
+
     @Insert
     fun insertAll(browsables: List<Browsable>)
 
@@ -27,4 +31,7 @@ interface BrowsableDao {
 
     @Query("SELECT COUNT(uri) FROM browsable")
     fun getCount(): Int
+
+    @Query("DELETE FROM browsable WHERE uri = :uri")
+    fun delete(uri: Uri)
 }
