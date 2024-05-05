@@ -183,7 +183,7 @@ class SpotifyWebApiService {
         }
     }
 
-    suspend fun getParentItems(userName: String): MutableMap<String, List<ChipItem>> {
+    suspend fun getBrowsables(userName: String): MutableMap<String, List<ChipItem>> {
         val chipItems: MutableMap<String, List<ChipItem>> = mutableMapOf()
         val savedAlbums = this.getSavedAlbums()
         val playlists = this.getPlaylists(userName)

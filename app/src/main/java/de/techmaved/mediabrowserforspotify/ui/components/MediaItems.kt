@@ -262,7 +262,7 @@ fun SelectionDialog(
     countState: MutableState<Int>
 ) {
     val updateRecord = emptyMap<String, MutableList<String>>().toMutableMap()
-    val tes = mutableStateOf(emptyMap<String, List<ChipItem>>())
+    val categorisedBrowsables = mutableStateOf(emptyMap<String, List<ChipItem>>())
     val context = LocalContext.current
     val store = Store(context)
     val userName = store.getUserName.collectAsState(initial = "")
@@ -272,7 +272,7 @@ fun SelectionDialog(
 
         LaunchedEffect(Unit) {
             withContext(Dispatchers.IO) {
-                tes.value = SpotifyWebApiService().getParentItems(userName.value)
+                categorisedBrowsables.value = SpotifyWebApiService().getBrowsables(userName.value)
                 parentItemsLoadingState.value = false
             }
         }
@@ -306,7 +306,7 @@ fun SelectionDialog(
                         }
                     } else {
                         LazyColumn {
-                            tes.value.forEach { (type, chipItems) ->
+                            categorisedBrowsables.value.forEach { (type, chipItems) ->
                                 item {
                                     Text(type)
 
