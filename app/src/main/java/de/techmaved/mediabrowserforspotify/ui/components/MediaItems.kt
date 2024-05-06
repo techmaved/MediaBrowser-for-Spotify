@@ -284,22 +284,20 @@ fun SelectionDialog(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
-                    .fillMaxHeight(),
+                    .wrapContentHeight(),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
                         .padding(16.dp)
                 ) {
                     if (parentItemsLoadingState.value) {
                         Column(
-                            modifier = Modifier.fillMaxSize(),
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentSize(Alignment.Center)
                         ) {
                             CircularProgressIndicator(
-                                modifier = Modifier.fillMaxSize(0.3f),
                                 color = MaterialTheme.colorScheme.primary,
                                 strokeWidth = 4.dp
                             )
@@ -352,7 +350,8 @@ fun SelectionDialog(
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .padding(5.dp),
+                                        .padding(5.dp)
+                                        .fillMaxHeight(),
                                     horizontalArrangement = Arrangement.End
                                 ) {
                                     TextButton(

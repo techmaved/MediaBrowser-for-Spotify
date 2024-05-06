@@ -186,12 +186,16 @@ class SpotifyWebApiService {
     suspend fun getBrowsables(userName: String): MutableMap<String, List<ChipItem>> {
         val chipItems: MutableMap<String, List<ChipItem>> = mutableMapOf()
         val savedAlbums = this.getSavedAlbums()
-        val playlists = this.getPlaylists(userName)
+        var playlists = this.getPlaylists(userName)
         val shows = this.getSavedShows()
         val likedSongsMirror = this.getLikedSongsMirror(userName)
 
         if (likedSongsMirror != null) {
             chipItems[ChipType.LIKED_SONGS] = listOf(ChipItem(likedSongsMirror.id, "Liked Songs", mutableStateOf(false)))
+
+            playlists = playlists?.filter { simplePlaylist: SimplePlaylist ->
+                return@filter simplePlaylist.id != likedSongsMirror.id
+            }
         }
 
         chipItems[ChipType.ALBUMS] = savedAlbums.map { ChipItem(it.album.id, it.album.name, mutableStateOf(false)) }
