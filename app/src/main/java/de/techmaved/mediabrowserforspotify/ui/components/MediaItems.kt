@@ -141,7 +141,7 @@ fun MirrorSection(isAuthenticated: Boolean) {
     if (isAuthenticated) {
         val context = LocalContext.current
         val store = Store(context)
-        val userName = store.getUserName.collectAsState(initial = "")
+        val userName = store.getUserName
 
         Text(
             text = "Create or sync mirror of liked songs",
@@ -155,7 +155,10 @@ fun MirrorSection(isAuthenticated: Boolean) {
             Button(onClick = {
                 loading = true
                 scope.launch {
-                    SpotifyWebApiService().handleMirror(userName.value)
+                    userName.collect {
+                        SpotifyWebApiService().handleMirror(it)
+                    }
+
                     loading = false
                 }
             }, enabled = !loading) {
@@ -163,6 +166,8 @@ fun MirrorSection(isAuthenticated: Boolean) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    val mirrorText = remember { mutableStateOf("Create/sync mirror") }
+
                     if (loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(ButtonDefaults.IconSize),
@@ -171,7 +176,21 @@ fun MirrorSection(isAuthenticated: Boolean) {
                         )
                     }
 
-                    Text("Create/sync mirror")
+                    LaunchedEffect(Unit) {
+                        withContext(Dispatchers.IO) {
+                            userName.collect {
+                                val hasMirror = SpotifyWebApiService().getLikedSongsMirror(it) !== null
+
+                                if (hasMirror) {
+                                    mirrorText.value = "Sync mirror"
+                                } else {
+                                    mirrorText.value = "Create mirror"
+                                }
+                            }
+                        }
+                    }
+
+                    Text(mirrorText.value)
                 }
             }
 
