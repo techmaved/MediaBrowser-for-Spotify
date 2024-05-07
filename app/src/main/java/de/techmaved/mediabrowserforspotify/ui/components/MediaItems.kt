@@ -1,43 +1,28 @@
 package de.techmaved.mediabrowserforspotify.ui.components
 
+import android.annotation.SuppressLint
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.twotone.Add
 import androidx.compose.material.icons.twotone.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.twotone.Edit
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import de.techmaved.mediabrowserforspotify.utils.AppDatabase
-import de.techmaved.mediabrowserforspotify.utils.MediaItemTree
-import de.techmaved.mediabrowserforspotify.utils.SpotifyWebApiService
+import androidx.compose.ui.window.Dialog
+import de.techmaved.mediabrowserforspotify.utils.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
@@ -53,7 +38,7 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
             modifier = Modifier.padding(start = 16.dp, end = 16.dp)
         )
 
-        val loadingState = remember { mutableStateOf(false) }
+        val getSongsLoadingState = remember { mutableStateOf(false) }
         val getSongsButtonEnabledState = remember { mutableStateOf(true) }
         getSongsButtonEnabledState.value = countState.value == 0
         val scope = rememberCoroutineScope()
@@ -64,9 +49,15 @@ fun TextWithButtons(countState: MutableState<Int>, isAuthenticated: Boolean) {
         ) {
             GetSongsButton(
                 isAuthenticated = isAuthenticated,
-                loadingState = loadingState,
+                loadingState = getSongsLoadingState,
                 getSongsButtonEnabledState = getSongsButtonEnabledState,
                 scope = scope,
+                countState = countState
+            )
+
+            SelectButton(
+                isAuthenticated = isAuthenticated,
+                getSongsLoadingState = getSongsLoadingState,
                 countState = countState
             )
 
@@ -87,6 +78,10 @@ fun GetSongsButton(
     scope: CoroutineScope,
     countState: MutableState<Int>
 ) {
+    val context = LocalContext.current
+    val store = Store(context)
+    val userName = store.getUserName.collectAsState(initial = "")
+
     if (isAuthenticated) {
         OutlinedButton(
             onClick = {
@@ -95,7 +90,7 @@ fun GetSongsButton(
 
                 scope.launch {
                     MediaItemTree.initialize()
-                    MediaItemTree.populateMediaTree().collect {
+                    MediaItemTree.populateMediaTree(userName.value).collect {
                         countState.value++
                     }
 
@@ -144,6 +139,10 @@ fun MirrorSection(isAuthenticated: Boolean) {
     val scope = rememberCoroutineScope()
 
     if (isAuthenticated) {
+        val context = LocalContext.current
+        val store = Store(context)
+        val userName = store.getUserName.collectAsState(initial = "")
+
         Text(
             text = "Create or sync mirror of liked songs",
             modifier = Modifier.padding(start = 16.dp, end = 16.dp)
@@ -156,7 +155,7 @@ fun MirrorSection(isAuthenticated: Boolean) {
             Button(onClick = {
                 loading = true
                 scope.launch {
-                    SpotifyWebApiService().handleMirror()
+                    SpotifyWebApiService().handleMirror(userName.value)
                     loading = false
                 }
             }, enabled = !loading) {
@@ -220,5 +219,171 @@ fun LikedSongsHelpDialog() {
                 }
             },
         )
+    }
+}
+
+@Composable
+fun SelectButton(
+    isAuthenticated: Boolean,
+    getSongsLoadingState: MutableState<Boolean>,
+    countState: MutableState<Int>
+) {
+    val dialogState = remember { mutableStateOf(false) }
+
+    if (isAuthenticated) {
+        OutlinedButton(
+            onClick = {
+                dialogState.value = true
+            }
+        ) {
+            Icon(imageVector = Icons.TwoTone.Edit, contentDescription = "Get songs")
+        }
+    }
+
+    SelectionDialog(
+        dialogState = dialogState,
+        getSongsLoadingState = getSongsLoadingState,
+        countState = countState
+    )
+}
+
+data class ChipItem(
+    val id: String,
+    val name: String,
+    val state: MutableState<Boolean>
+)
+
+@SuppressLint("UnrememberedMutableState")
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SelectionDialog(
+    dialogState: MutableState<Boolean>,
+    getSongsLoadingState: MutableState<Boolean>,
+    countState: MutableState<Int>
+) {
+    val updateRecord = emptyMap<String, MutableList<String>>().toMutableMap()
+    val categorisedBrowsables = mutableStateOf(emptyMap<String, List<ChipItem>>())
+    val context = LocalContext.current
+    val store = Store(context)
+    val userName = store.getUserName.collectAsState(initial = "")
+
+    if (dialogState.value) {
+        val parentItemsLoadingState = remember { mutableStateOf(true) }
+
+        LaunchedEffect(Unit) {
+            withContext(Dispatchers.IO) {
+                categorisedBrowsables.value = SpotifyWebApiService().getBrowsables(userName.value)
+                parentItemsLoadingState.value = false
+            }
+        }
+
+        Dialog(
+            onDismissRequest = { dialogState.value = false }
+        ) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .wrapContentHeight(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                ) {
+                    if (parentItemsLoadingState.value) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentSize(Alignment.Center)
+                        ) {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.primary,
+                                strokeWidth = 4.dp
+                            )
+                        }
+                    } else {
+                        LazyColumn {
+                            categorisedBrowsables.value.forEach { (type, chipItems) ->
+                                item {
+                                    Text(type)
+
+                                    FlowRow(
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                    ) {
+                                        chipItems.forEach {
+                                            val selected = it.state
+                                            FilterChip(
+                                                onClick = {
+                                                    selected.value = !selected.value
+
+                                                    if (updateRecord[type] != null) {
+                                                        updateRecord[type]?.add(it.id)
+                                                    } else {
+                                                        updateRecord[type] = mutableListOf(it.id)
+                                                    }
+                                                },
+                                                label = {
+                                                    Text(it.name)
+                                                },
+                                                selected = selected.value,
+                                                leadingIcon =
+                                                if (selected.value) {
+                                                    {
+                                                        Icon(
+                                                            imageVector = Icons.Filled.Done,
+                                                            contentDescription = "Done icon",
+                                                            modifier = Modifier.size(FilterChipDefaults.IconSize)
+                                                        )
+                                                    }
+                                                } else {
+                                                    null
+                                                },
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(5.dp)
+                                        .fillMaxHeight(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    TextButton(
+                                        onClick = {
+                                            dialogState.value = false
+                                        }
+                                    ) {
+                                        Text("Cancel")
+                                    }
+
+                                    TextButton(
+                                        onClick = {
+                                            dialogState.value = false
+                                            getSongsLoadingState.value = true
+                                            
+                                            CoroutineScope(Dispatchers.IO).launch {
+                                                doPartUpdate(updateRecord, userName.value).collect {
+                                                    countState.value += it
+                                                }
+
+                                                getSongsLoadingState.value = false
+                                            }
+                                        }
+                                    ) {
+                                        Text("Update selected in cache")
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }

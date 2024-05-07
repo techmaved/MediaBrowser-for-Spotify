@@ -1,5 +1,6 @@
 package de.techmaved.mediabrowserforspotify.dao
 
+import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -21,4 +22,10 @@ interface MediaDao {
 
     @Query("SELECT COUNT(uri) FROM mediaItem")
     fun getCount(): Int
+
+    @Query("DELETE FROM mediaItem WHERE browsableUri = :browsableUri")
+    fun deleteBrowsableMediaItems(browsableUri: Uri)
+
+    @Query("SELECT COUNT(uri) FROM mediaItem WHERE browsableUri = :browsableUri")
+    fun getCountByBrowsable(browsableUri: Uri): Int
 }

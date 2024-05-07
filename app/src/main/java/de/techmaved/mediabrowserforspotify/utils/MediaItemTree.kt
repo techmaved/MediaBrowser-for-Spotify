@@ -19,7 +19,6 @@ import android.net.Uri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.SubtitleConfiguration
 import androidx.media3.common.MediaMetadata
-import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.PlaylistTrack
 import com.adamratzman.spotify.models.SavedAlbum
 import com.adamratzman.spotify.models.SavedShow
@@ -30,6 +29,11 @@ import com.google.common.collect.ImmutableList
 import de.techmaved.mediabrowserforspotify.MyApplication
 import de.techmaved.mediabrowserforspotify.entities.Browsable
 import de.techmaved.mediabrowserforspotify.entities.BrowsableWithMediaItems
+import de.techmaved.mediabrowserforspotify.utils.MediaItemType.ALBUM_ID
+import de.techmaved.mediabrowserforspotify.utils.MediaItemType.LIKED_SONG_ID
+import de.techmaved.mediabrowserforspotify.utils.MediaItemType.PLAYLIST_ID
+import de.techmaved.mediabrowserforspotify.utils.MediaItemType.ROOT_ID
+import de.techmaved.mediabrowserforspotify.utils.MediaItemType.SHOW_ID
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -47,12 +51,6 @@ object MediaItemTree {
     private var treeNodes: MutableMap<String, MediaItemNode> = mutableMapOf()
     private var titleMap: MutableMap<String, MediaItemNode> = mutableMapOf()
     private var isInitialized = false
-    private const val ROOT_ID = "[rootID]"
-    private const val LIKED_SONG_ID = "[likedSongID]"
-    private const val ALBUM_ID = "[albumID]"
-    private const val PLAYLIST_ID = "[playlistId]"
-    private const val SHOW_ID = "[showId]"
-    private var username: String? = ""
     private val spotifyWebApiService = SpotifyWebApiService()
     private val database = AppDatabase.getDatabase(MyApplication.context)
 
@@ -241,10 +239,8 @@ object MediaItemTree {
         }
     }
 
-    suspend fun populateMediaTree(): Flow<Unit> = channelFlow {
-        username = guardValidSpotifyApi { api: SpotifyClientApi -> api.getUserId() }
-
-        spotifyWebApiService.getPlaylists(username)?.forEach { simplePlaylist: SimplePlaylist ->
+    suspend fun populateMediaTree(userName: String): Flow<Unit> = channelFlow {
+        spotifyWebApiService.getPlaylists(userName)?.forEach { simplePlaylist: SimplePlaylist ->
             if (simplePlaylist.name == spotifyWebApiService.mirrorName) {
                 insertBrowsable(
                     uri = simplePlaylist.uri.uri,
