@@ -137,6 +137,7 @@ fun DeleteCacheButton(
 fun MirrorSection(isAuthenticated: Boolean) {
     var loading by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val mirrorText = remember { mutableStateOf("Create/sync mirror") }
 
     if (isAuthenticated) {
         val context = LocalContext.current
@@ -157,6 +158,7 @@ fun MirrorSection(isAuthenticated: Boolean) {
                 scope.launch {
                     userName.collect {
                         SpotifyWebApiService().handleMirror(it)
+                        mirrorText.value = "Sync mirror"
                     }
 
                     loading = false
@@ -166,8 +168,6 @@ fun MirrorSection(isAuthenticated: Boolean) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val mirrorText = remember { mutableStateOf("Create/sync mirror") }
-
                     if (loading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(ButtonDefaults.IconSize),
