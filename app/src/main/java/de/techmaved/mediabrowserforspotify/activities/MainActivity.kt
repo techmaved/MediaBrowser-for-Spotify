@@ -17,13 +17,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import de.techmaved.mediabrowserforspotify.components.Authentication
-import de.techmaved.mediabrowserforspotify.components.Database
-import de.techmaved.mediabrowserforspotify.components.MediaItems
-import de.techmaved.mediabrowserforspotify.components.SpotifyDesign
 import de.techmaved.mediabrowserforspotify.models.Model
+import de.techmaved.mediabrowserforspotify.ui.components.*
 import de.techmaved.mediabrowserforspotify.ui.theme.MediaBrowserForSpotifyTheme
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,16 +55,18 @@ class MainActivity : ComponentActivity() {
 fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Boolean) {
     val mediaItemCount = remember { mutableStateOf(0) }
 
-    Column(
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        Authentication().SpotifyAuthSection(isAuthenticated, activity)
-        Database().MediaItemsInDatabase(mediaItemCount)
-        MediaItems().TextWithButtons(mediaItemCount, isAuthenticated)
-        MediaItems().MirrorSection(isAuthenticated)
-        SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
+    AppBarWithContainer(activity, isAuthenticated) {
+        Column(
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            MediaItemsDatabaseCounter(mediaItemCount)
+            TextWithButtons(mediaItemCount, isAuthenticated)
+            MirrorSection(isAuthenticated)
+            SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
+            SourceCodeLink()
+        }
     }
 }
 
