@@ -256,7 +256,7 @@ object MediaItemTree {
                             uri = it.uri.uri,
                             browsableUri = simplePlaylist.uri.uri,
                             title = it.name,
-                            artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+                            artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
                         )
                         send(Unit)
                     }
@@ -277,7 +277,7 @@ object MediaItemTree {
                         uri = it.uri.uri,
                         browsableUri = simplePlaylist.uri.uri,
                         title = it.name,
-                        artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+                        artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
                     )
                     send(Unit)
                 }
@@ -301,7 +301,7 @@ object MediaItemTree {
                                 uri = it.uri.uri,
                                 browsableUri = savedAlbum.album.uri.uri,
                                 title = it.name,
-                                artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+                                artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
                             )
 
                             send(Unit)

@@ -107,7 +107,7 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
                         uri = Uri.parse(track.uri.uri),
                         browsableUri = browsable.uri,
                         title = track.name,
-                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
                     ))
                 }
             }
@@ -119,7 +119,7 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
                         uri = Uri.parse(albumTrack.uri.uri),
                         browsableUri = browsable.uri,
                         title = albumTrack.name,
-                        artist = albumTrack.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+                        artist = albumTrack.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
                     ))
             }
         }
@@ -131,7 +131,7 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
                         uri = Uri.parse(track.uri.uri),
                         browsableUri = browsable.uri,
                         title = track.name,
-                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name }
+                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
                     ))
                 }
             }
