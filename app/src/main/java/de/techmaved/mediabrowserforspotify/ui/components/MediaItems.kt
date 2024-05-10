@@ -154,14 +154,19 @@ fun MirrorSection(isAuthenticated: Boolean) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(onClick = {
-                loading = true
                 scope.launch {
                     userName.collect {
+                        loading = true
+
+                        if (it == "") {
+                            return@collect
+                        }
+
                         SpotifyWebApiService().handleMirror(it)
                         mirrorText.value = "Sync mirror"
-                    }
 
-                    loading = false
+                        loading = false
+                    }
                 }
             }, enabled = !loading) {
                 Row(
@@ -179,6 +184,10 @@ fun MirrorSection(isAuthenticated: Boolean) {
                     LaunchedEffect(Unit) {
                         withContext(Dispatchers.IO) {
                             userName.collect {
+                                if (it == "") {
+                                    return@collect
+                                }
+
                                 val hasMirror = SpotifyWebApiService().getLikedSongsMirror(it) !== null
 
                                 if (hasMirror) {
