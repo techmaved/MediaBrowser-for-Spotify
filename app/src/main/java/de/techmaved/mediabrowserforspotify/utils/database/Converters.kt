@@ -1,4 +1,4 @@
-package de.techmaved.mediabrowserforspotify.utils
+package de.techmaved.mediabrowserforspotify.utils.database
 
 import android.net.Uri
 import androidx.room.TypeConverter

@@ -1,4 +1,4 @@
-package de.techmaved.mediabrowserforspotify.utils
+package de.techmaved.mediabrowserforspotify.models
 
 
 object MediaItemType {

@@ -4,6 +4,8 @@ import androidx.compose.runtime.mutableStateOf
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.*
 import de.techmaved.mediabrowserforspotify.BuildConfig
+import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
+import de.techmaved.mediabrowserforspotify.models.ChipType
 import de.techmaved.mediabrowserforspotify.ui.components.ChipItem
 
 class SpotifyWebApiService {

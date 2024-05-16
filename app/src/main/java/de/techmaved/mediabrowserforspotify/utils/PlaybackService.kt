@@ -45,6 +45,8 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
+import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
+import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
 import kotlinx.coroutines.*
 
 class PlaybackService : MediaLibraryService() {
