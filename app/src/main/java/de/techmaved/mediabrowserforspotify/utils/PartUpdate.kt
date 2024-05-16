@@ -3,12 +3,15 @@ package de.techmaved.mediabrowserforspotify.utils
 import android.net.Uri
 import com.adamratzman.spotify.SpotifyClientApi
 import de.techmaved.mediabrowserforspotify.MyApplication
+import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
 import de.techmaved.mediabrowserforspotify.entities.Browsable
 import de.techmaved.mediabrowserforspotify.entities.MediaItem
-import de.techmaved.mediabrowserforspotify.utils.MediaItemType.ALBUM_ID
-import de.techmaved.mediabrowserforspotify.utils.MediaItemType.LIKED_SONG_ID
-import de.techmaved.mediabrowserforspotify.utils.MediaItemType.PLAYLIST_ID
-import de.techmaved.mediabrowserforspotify.utils.MediaItemType.SHOW_ID
+import de.techmaved.mediabrowserforspotify.models.ChipType
+import de.techmaved.mediabrowserforspotify.models.MediaItemType.ALBUM_ID
+import de.techmaved.mediabrowserforspotify.models.MediaItemType.LIKED_SONG_ID
+import de.techmaved.mediabrowserforspotify.models.MediaItemType.PLAYLIST_ID
+import de.techmaved.mediabrowserforspotify.models.MediaItemType.SHOW_ID
+import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
