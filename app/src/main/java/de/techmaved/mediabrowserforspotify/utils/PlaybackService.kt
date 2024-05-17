@@ -265,17 +265,13 @@ class PlaybackService : MediaLibraryService() {
                     val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 
                     audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())
-
-                    spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
-                        if (it.track != null) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                guardValidSpotifyApi { api: SpotifyClientApi ->
-                                    api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
-                                }
-
-                                audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
+                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())?.setResultCallback {
+                        runBlocking {
+                            guardValidSpotifyApi { api: SpotifyClientApi ->
+                                api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
                             }
+
+                            audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
                         }
                     }
                 }
