@@ -1,10 +1,9 @@
-package de.techmaved.mediabrowserforspotify.utils
+package de.techmaved.mediabrowserforspotify.auth
 
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.SpotifyException
 import com.adamratzman.spotify.auth.pkce.startSpotifyClientPkceLoginActivity
 import de.techmaved.mediabrowserforspotify.activities.MainActivity
-import de.techmaved.mediabrowserforspotify.auth.SpotifyPkceLoginActivityImpl
 import de.techmaved.mediabrowserforspotify.models.Model
 import kotlinx.coroutines.coroutineScope
 

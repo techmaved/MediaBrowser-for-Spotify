@@ -45,6 +45,8 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
+import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
+import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
 import kotlinx.coroutines.*
 
 class PlaybackService : MediaLibraryService() {
@@ -263,17 +265,23 @@ class PlaybackService : MediaLibraryService() {
                     val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
 
                     audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())
-
-                    spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
-                        if (it.track != null) {
-                            CoroutineScope(Dispatchers.IO).launch {
-                                guardValidSpotifyApi { api: SpotifyClientApi ->
+                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())?.setResultCallback {
+                        runBlocking {
+                            guardValidSpotifyApi { api: SpotifyClientApi ->
+                                try {
                                     api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
-                                }
 
-                                audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
+                                    delay(2000)
+                                    spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
+                                        if (it.isPaused) {
+                                            spotifyAppRemote?.playerApi?.seekTo(0)
+                                            spotifyAppRemote?.playerApi?.resume()
+                                        }
+                                    }
+                                } catch (e: Throwable) {}
                             }
+
+                            audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
                         }
                     }
                 }
