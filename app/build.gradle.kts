@@ -3,6 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.devtools.ksp")
     id("io.github.reactivecircus.app-versioning")
+    id("com.mikepenz.aboutlibraries.plugin")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
@@ -148,4 +150,9 @@ dependencies {
     implementation("com.mikepenz:iconics-compose:5.4.0")
     implementation("com.mikepenz:fontawesome-typeface:5.9.0.2-kotlin@aar")
     implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("com.mikepenz:aboutlibraries-core:11.1.4")
+    implementation("com.mikepenz:aboutlibraries-compose-m3:11.1.4")
+    implementation("androidx.navigation:navigation-fragment-compose:2.8.0-rc01")
+    implementation("androidx.navigation:navigation-compose:2.8.0-rc01")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }

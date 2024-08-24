@@ -15,11 +15,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import de.techmaved.mediabrowserforspotify.models.Model
 import de.techmaved.mediabrowserforspotify.ui.components.*
 import de.techmaved.mediabrowserforspotify.ui.theme.MediaBrowserForSpotifyTheme
+import de.techmaved.mediabrowserforspotify.ui.Info
+import de.techmaved.mediabrowserforspotify.ui.Main
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -31,11 +36,25 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Ui(
-                        activity,
-                        Model.credentialStore.spotifyToken != null,
-                        isPackageInstalled(SpotifyDesign().spotifyPackage, applicationContext.packageManager)
-                    )
+                    val navController = rememberNavController()
+
+                    NavHost(
+                        navController = navController,
+                        startDestination = Main
+                    ) {
+                        composable<Main> {
+                            Ui(
+                                activity,
+                                Model.credentialStore.spotifyToken != null,
+                                isPackageInstalled(SpotifyDesign().spotifyPackage, applicationContext.packageManager),
+                                navController
+                            )
+                        }
+
+                        composable<Info> {
+                            Info()
+                        }
+                    }
                 }
             }
         }
@@ -52,7 +71,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable()
-fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Boolean) {
+fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Boolean, navController: NavController) {
     val mediaItemCount = remember { mutableStateOf(0) }
 
     AppBarWithContainer(activity, isAuthenticated) {
@@ -65,13 +84,7 @@ fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Bo
             TextWithButtons(mediaItemCount, isAuthenticated)
             MirrorSection(isAuthenticated)
             SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
-            SourceCodeLink()
+            InfoButton(navController)
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun Preview() {
-    Ui(null, true, true)
 }
