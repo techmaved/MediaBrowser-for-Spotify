@@ -262,7 +262,7 @@ class PlaybackService : MediaLibraryService() {
 
                 if (Player.STATE_IDLE != playbackState) {
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
-                    val contextUri = ContextUri.invoke(currentMediaItem?.mediaMetadata?.artworkUri.toString())
+                    val contextUri = ContextUri.invoke(currentMediaItem?.localConfiguration?.tag.toString())
 
                     audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
                     spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())?.setResultCallback {

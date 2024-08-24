@@ -84,7 +84,7 @@ object MediaItemTree {
         artist: String? = null,
         genre: String? = null,
         sourceUri: Uri? = null,
-        imageUri: Uri? = null
+        browsableUri: Uri? = null
     ): MediaItem {
         val metadata =
             MediaMetadata.Builder()
@@ -94,7 +94,6 @@ object MediaItemTree {
                 .setGenre(genre)
                 .setIsBrowsable(isBrowsable)
                 .setIsPlayable(isPlayable)
-                .setArtworkUri(imageUri)
                 .setMediaType(mediaType)
                 .build()
 
@@ -103,6 +102,7 @@ object MediaItemTree {
             .setSubtitleConfigurations(subtitleConfigurations)
             .setMediaMetadata(metadata)
             .setUri(sourceUri)
+            .setTag(browsableUri)
             .build()
     }
 
@@ -201,7 +201,7 @@ object MediaItemTree {
                                 artist = mediaItem.artist,
                                 genre = "",
                                 sourceUri = mediaItem.uri,
-                                imageUri = mediaItem.browsableUri
+                                browsableUri = mediaItem.browsableUri
                             )
                         )
 
