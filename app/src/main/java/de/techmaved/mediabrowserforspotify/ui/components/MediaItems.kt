@@ -226,7 +226,6 @@ fun LikedSongsHelpDialog() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(imageVector = Icons.Outlined.Info, contentDescription = null)
-            Text("Info")
         }
     }
 

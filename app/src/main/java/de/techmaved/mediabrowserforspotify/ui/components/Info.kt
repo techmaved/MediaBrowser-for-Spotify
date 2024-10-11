@@ -38,31 +38,6 @@ import de.techmaved.mediabrowserforspotify.R
 import de.techmaved.mediabrowserforspotify.ui.Info
 
 @Composable
-fun InfoButton(navController: NavController) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        FilledTonalButton(
-            onClick = {
-                navController.navigate(Info)
-            }
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = "Info"
-                )
-                Text(text = "Info")
-            }
-        }
-    }
-}
-
-@Composable
 fun Info() {
     val context = LocalContext.current
     val repoUrl = stringResource(R.string.github_repository)

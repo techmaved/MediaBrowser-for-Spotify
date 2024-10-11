@@ -74,7 +74,7 @@ class MainActivity : ComponentActivity() {
 fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Boolean, navController: NavController) {
     val mediaItemCount = remember { mutableStateOf(0) }
 
-    AppBarWithContainer(activity, isAuthenticated) {
+    AppBarWithContainer(activity, isAuthenticated, navController) {
         Column(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,7 +84,6 @@ fun Ui(activity: MainActivity?, isAuthenticated: Boolean, isSpotifyInstalled: Bo
             TextWithButtons(mediaItemCount, isAuthenticated)
             MirrorSection(isAuthenticated)
             SpotifyDesign().LinkToSpotify(isSpotifyInstalled, activity)
-            InfoButton(navController)
         }
     }
 }
