@@ -266,22 +266,22 @@ class PlaybackService : MediaLibraryService() {
 
                     audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
                     spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())?.setResultCallback {
-                        runBlocking {
+                        CoroutineScope(Dispatchers.IO).launch {
                             guardValidSpotifyApi { api: SpotifyClientApi ->
                                 try {
                                     api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
 
-                                    delay(2000)
+                                    delay(1000)
                                     spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
                                         if (it.isPaused) {
                                             spotifyAppRemote?.playerApi?.seekTo(0)
                                             spotifyAppRemote?.playerApi?.resume()
                                         }
+
+                                        audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
                                     }
                                 } catch (e: Throwable) {}
                             }
-
-                            audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
                         }
                     }
                 }
