@@ -35,6 +35,7 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.ContextUri
+import com.adamratzman.spotify.models.DeviceType
 import com.adamratzman.spotify.models.PlayableUri
 import de.techmaved.mediabrowserforspotify.activities.MainActivity
 import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
@@ -264,24 +265,33 @@ class PlaybackService : MediaLibraryService() {
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
                     val contextUri = ContextUri.invoke(currentMediaItem?.localConfiguration?.tag.toString())
 
-                    audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())?.setResultCallback {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            guardValidSpotifyApi { api: SpotifyClientApi ->
-                                try {
-                                    api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
-
-                                    delay(1000)
-                                    spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
-                                        if (it.isPaused) {
-                                            spotifyAppRemote?.playerApi?.seekTo(0)
-                                            spotifyAppRemote?.playerApi?.resume()
-                                        }
-
-                                        audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
-                                    }
-                                } catch (e: Throwable) {}
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val device = guardValidSpotifyApi { it ->
+                                it.player.getDevices().find { device ->
+                                    device.type == DeviceType.Smartphone
+                                }
                             }
+
+                            delay(500)
+
+                            if (device != null && device.id != null) {
+                                guardValidSpotifyApi { it ->
+                                    if (it.player.getCurrentlyPlaying()?.isPlaying ?: false) {
+                                        it.player.pause(device.id)
+                                    }
+
+                                    delay(500)
+
+                                    it.player.startPlayback(
+                                        contextUri = contextUri,
+                                        offsetPlayableUri = playableUri,
+                                        deviceId = device.id
+                                    )
+                                }
+                            }
+                        } catch (e: Exception) {
+                            println(e.printStackTrace())
                         }
                     }
                 }
