@@ -18,7 +18,7 @@ internal var pkceClassBackTo: Class<out Activity>? = null
 class SpotifyPkceLoginActivityImpl : AbstractSpotifyPkceLoginActivity() {
     override val clientId = BuildConfig.SPOTIFY_CLIENT_ID
     override val redirectUri = BuildConfig.SPOTIFY_REDIRECT_URI
-    override val scopes = SpotifyScope.values().toList()
+    override val scopes = SpotifyScope.entries
 
     override fun onSuccess(api: SpotifyClientApi) {
         val model = (application as MyApplication).model
