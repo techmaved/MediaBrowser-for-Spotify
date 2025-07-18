@@ -156,4 +156,5 @@ dependencies {
     implementation(libs.navigation.fragment.compose)
     implementation(libs.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.compose.material.icons)
 }

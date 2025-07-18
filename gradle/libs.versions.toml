@@ -33,6 +33,7 @@ media3 = "1.7.1"
 coreKtx = "1.16.0"
 spotifyApiKotlinCore = "4.1.3"
 aboutlibrariesCore = "12.2.4"
+composeMaterialIcons = "1.7.8"
 
 [libraries]
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
@@ -79,6 +80,7 @@ lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtim
 navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 navigation-fragment-compose = { group = "androidx.navigation", name = "navigation-fragment-compose", version.ref = "navigationFragmentCompose" }
 spotify-api-kotlin-core = { group = "com.adamratzman", name = "spotify-api-kotlin-core", version.ref = "spotifyApiKotlinCore" }
+compose-material-icons = { group = "androidx.compose.material", name = "material-icons-core", version.ref = "composeMaterialIcons" }
 
 [plugins]
 android-application = { id = "com.android.application",  version.ref = "androidGradlePlugin" }
