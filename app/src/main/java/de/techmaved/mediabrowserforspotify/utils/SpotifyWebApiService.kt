@@ -223,6 +223,10 @@ class SpotifyWebApiService {
         return null
     }
 
+    suspend fun getDevices(): List<Device>? {
+        return guardValidSpotifyApi { api -> api.player.getDevices() }
+    }
+
     private suspend fun getAllSavedTracks(): List<SavedTrack> {
         val tracks = mutableListOf<SavedTrack>()
         var limit: Int = getLimit()

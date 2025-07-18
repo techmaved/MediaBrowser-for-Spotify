@@ -12,10 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,14 +24,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.mikepenz.iconics.compose.Image
 import androidx.core.graphics.drawable.toBitmap
-import androidx.navigation.NavController
 import com.mikepenz.aboutlibraries.ui.compose.m3.LibrariesContainer
+import com.mikepenz.iconics.compose.Image
 import com.mikepenz.iconics.typeface.library.fontawesome.FontAwesome
 import de.techmaved.mediabrowserforspotify.BuildConfig
 import de.techmaved.mediabrowserforspotify.R
-import de.techmaved.mediabrowserforspotify.ui.Info
 
 @Composable
 fun Info() {
