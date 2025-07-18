@@ -46,7 +46,10 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
+import de.techmaved.mediabrowserforspotify.MyApplication
 import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
+import de.techmaved.mediabrowserforspotify.models.settings.PreferredDevice
+import de.techmaved.mediabrowserforspotify.models.settings.preferredDeviceKey
 import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
 import kotlinx.coroutines.*
 
@@ -267,27 +270,24 @@ class PlaybackService : MediaLibraryService() {
 
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            val device = guardValidSpotifyApi { it ->
-                                it.player.getDevices().find { device ->
-                                    device.type == DeviceType.Smartphone
-                                }
-                            }
+                            val store = Store(MyApplication.context)
+                            store.getSetting<PreferredDevice>(preferredDeviceKey).collect { preferredDevice ->
+                                delay(500)
 
-                            delay(500)
+                                if (preferredDevice != null && preferredDevice.id != null) {
+                                    guardValidSpotifyApi { it ->
+                                        if (it.player.getCurrentlyPlaying()?.isPlaying ?: false) {
+                                            it.player.pause(preferredDevice.id)
+                                        }
 
-                            if (device != null && device.id != null) {
-                                guardValidSpotifyApi { it ->
-                                    if (it.player.getCurrentlyPlaying()?.isPlaying ?: false) {
-                                        it.player.pause(device.id)
+                                        delay(500)
+
+                                        it.player.startPlayback(
+                                            contextUri = contextUri,
+                                            offsetPlayableUri = playableUri,
+                                            deviceId = preferredDevice.id
+                                        )
                                     }
-
-                                    delay(500)
-
-                                    it.player.startPlayback(
-                                        contextUri = contextUri,
-                                        offsetPlayableUri = playableUri,
-                                        deviceId = device.id
-                                    )
                                 }
                             }
                         } catch (e: Exception) {
