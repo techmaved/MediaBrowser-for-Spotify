@@ -37,18 +37,32 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adamratzman.spotify.models.Device
 import de.techmaved.mediabrowserforspotify.R
+import de.techmaved.mediabrowserforspotify.models.settings.DefaultSetting
 import de.techmaved.mediabrowserforspotify.models.settings.PreferredDevice
+import de.techmaved.mediabrowserforspotify.models.settings.Setting
+import de.techmaved.mediabrowserforspotify.models.settings.SortOption
 import de.techmaved.mediabrowserforspotify.models.settings.preferredDeviceKey
+import de.techmaved.mediabrowserforspotify.models.settings.sortByKey
 import de.techmaved.mediabrowserforspotify.ui.theme.Typography
 import de.techmaved.mediabrowserforspotify.utils.SpotifyWebApiService
 import de.techmaved.mediabrowserforspotify.utils.Store
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun Settings() {
+    val context = LocalContext.current
+    val store = Store(context)
+    val scope = rememberCoroutineScope()
+
+    val (devices, setDevices) = remember { mutableStateOf<List<Device>?>(null) }
+    val (preferredDevice, setPreferredDevice) = remember { mutableStateOf<Setting?>(null) }
+
+    val (sorting, setSorting) = remember { mutableStateOf<Setting?>(null) }
+
     Surface(
         modifier = Modifier
             .fillMaxSize()
@@ -56,24 +70,6 @@ fun Settings() {
             .navigationBarsPadding(),
         color = MaterialTheme.colorScheme.background
     ) {
-        val (devices, setDevices) = remember { mutableStateOf<List<Device>?>(null) }
-        val (preferredDevice, setPreferredDevice) = remember { mutableStateOf<PreferredDevice?>(null) }
-        val context = LocalContext.current
-        val store = Store(context)
-        val scope = rememberCoroutineScope()
-
-        LaunchedEffect(Unit) {
-            scope.launch {
-                withContext(Dispatchers.IO) {
-                    setDevices(SpotifyWebApiService().getDevices())
-
-                    store.getSetting<PreferredDevice>(preferredDeviceKey).collect { preferredDevice ->
-                        setPreferredDevice(preferredDevice)
-                    }
-                }
-            }
-        }
-
         Column {
             Column(
                 modifier = Modifier
@@ -92,11 +88,18 @@ fun Settings() {
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column {
-                    Setting(
-                        stringResource(R.string.preferred_device),
+                    PreferredDeviceSetting(
                         devices,
+                        setDevices,
                         preferredDevice,
-                        setPreferredDevice
+                        setPreferredDevice,
+                        store
+                    )
+
+                    SortOptionSetting(
+                        sorting,
+                        setSorting,
+                        store
                     )
                 }
 
@@ -106,17 +109,30 @@ fun Settings() {
                 ) {
                     Button(
                         onClick = {
-                            val selected = preferredDevice
-
-                            if (selected == null) {
-                                return@Button
-                            }
-
                             scope.launch {
-                                store.saveSetting(
-                                    PreferredDevice(selected.id, selected.name),
-                                    preferredDeviceKey
-                                )
+                                launch {
+                                    val selected = preferredDevice
+                                    if (selected == null) {
+                                        return@launch
+                                    }
+
+                                    store.saveSetting(
+                                        PreferredDevice(selected.value, selected.label),
+                                        preferredDeviceKey
+                                    )
+                                }
+                                launch {
+                                    val selected = sorting
+                                    if (selected == null) {
+                                        return@launch
+                                    }
+
+                                    println("Saving")
+                                    store.saveSetting(
+                                        SortOption(selected.value, selected.label),
+                                        sortByKey
+                                    )
+                                }
                             }
 
                             showToast(context, R.string.saved)
@@ -130,23 +146,92 @@ fun Settings() {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Dropdown(_options: List<Device>?, preferredDevice: PreferredDevice?, setPreferredDevice: (PreferredDevice?) -> Unit) {
-    if (_options == null) {
-        Text(stringResource(R.string.failed_to_fetch))
+fun PreferredDeviceSetting(
+    devices: List<Device>?,
+    setDevices: (List<Device>?) -> Unit,
+    preferredDevice: Setting?,
+    setPreferredDevice: (Setting?) -> Unit,
+    store: Store
+) {
+    val scope = rememberCoroutineScope()
 
-        return
+    LaunchedEffect(Unit) {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                setDevices(SpotifyWebApiService().getDevices())
+
+                store.getSetting<PreferredDevice>(preferredDeviceKey).take(1)
+                    .collect { preferredDevice ->
+                        setPreferredDevice(preferredDevice)
+                    }
+            }
+        }
     }
 
-    val options: List<Device> = _options
-    val currentOption = options.find { preferredDevice?.id == it.id }
+    Setting(
+        stringResource(R.string.preferred_device),
+        devices?.map { PreferredDevice(it.id!!, it.name) },
+        preferredDevice,
+        setPreferredDevice
+    )
+}
+
+@Composable
+fun SortOptionSetting(
+    sorting: Setting?,
+    setSorting: (Setting?) -> Unit,
+    store: Store
+) {
+    val scope = rememberCoroutineScope()
+    val sortOptions = listOf<Setting>(SortOption("1", "Label 1"), SortOption("2", "Label 2"))
+
+    LaunchedEffect(Unit) {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                store.getSetting<SortOption>(sortByKey).take(1).collect { sortOption ->
+                    println("Got")
+                    println(sortOption)
+                    setSorting(sortOption)
+                }
+            }
+        }
+    }
+
+    Setting(
+        stringResource(R.string.sort_by),
+        sortOptions,
+        sorting,
+        setSorting
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun Dropdown(
+    _options: List<Setting>?,
+    selectedOption: Setting?,
+    setSelectedOption: (Setting?) -> Unit
+) {
+    var options: List<Setting>? = _options
+
+    if (options == null || options.isEmpty()) {
+        // TODO: implement failed to fetch when actual failing
+
+        options = listOf(DefaultSetting("", stringResource(R.string.no_selection)))
+    }
+
+    val currentOption = options.find { selectedOption?.value == it.value }
 
     var expanded by remember {
         mutableStateOf(false)
     }
-    var selectedItem by remember {
-        mutableStateOf(currentOption ?: options[0])
+    val selectedItem = remember {
+        mutableStateOf(options[0])
+    }
+
+    if (currentOption != null) {
+        selectedItem.value = currentOption
     }
 
     ExposedDropdownMenuBox(
@@ -164,7 +249,7 @@ fun Dropdown(_options: List<Device>?, preferredDevice: PreferredDevice?, setPref
                 modifier = Modifier
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
                     .fillMaxWidth(),
-                value = selectedItem.name,
+                value = selectedItem.value.label,
                 onValueChange = { },
                 readOnly = true,
                 trailingIcon = {
@@ -186,12 +271,12 @@ fun Dropdown(_options: List<Device>?, preferredDevice: PreferredDevice?, setPref
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(item.name)
+                            Text(item.label)
                         }
                     },
                     onClick = {
-                        selectedItem = options[index]
-                        setPreferredDevice(PreferredDevice(selectedItem.id, selectedItem.name))
+                        selectedItem.value = options[index]
+                        setSelectedOption(selectedItem.value)
 
                         expanded = false
                     },
@@ -204,10 +289,10 @@ fun Dropdown(_options: List<Device>?, preferredDevice: PreferredDevice?, setPref
 
 @Composable
 fun Setting(
-    setting: String,
-    options: List<Device>?,
-    preferredDevice: PreferredDevice?,
-    setPreferredDevice: (PreferredDevice?) -> Unit
+    settingKey: String,
+    options: List<Setting>?,
+    setting: Setting?,
+    setSetting: (Setting?) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -215,8 +300,8 @@ fun Setting(
             .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Text(setting)
-        Dropdown(options, preferredDevice, setPreferredDevice)
+        Text(settingKey)
+        Dropdown(options, setting, setSetting)
     }
 }
 

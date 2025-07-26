@@ -1,15 +1,13 @@
 package de.techmaved.mediabrowserforspotify.models.settings
 
 import com.google.gson.annotations.SerializedName
-import kotlinx.serialization.Serializable
 
-const val preferredDeviceKey = "preferredDevice"
+abstract class Setting {
+    abstract val value: String
+    abstract val label: String
+}
 
-@Serializable
-data class PreferredDevice(
-    @SerializedName("id")
+data class DefaultSetting(
     override val value: String,
-
-    @SerializedName("name")
     override val label: String,
 ): Setting()
