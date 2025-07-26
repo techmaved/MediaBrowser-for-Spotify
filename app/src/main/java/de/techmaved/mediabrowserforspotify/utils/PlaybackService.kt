@@ -33,9 +33,7 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
-import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.ContextUri
-import com.adamratzman.spotify.models.DeviceType
 import com.adamratzman.spotify.models.PlayableUri
 import de.techmaved.mediabrowserforspotify.activities.MainActivity
 import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
@@ -274,10 +272,10 @@ class PlaybackService : MediaLibraryService() {
                             store.getSetting<PreferredDevice>(preferredDeviceKey).collect { preferredDevice ->
                                 delay(500)
 
-                                if (preferredDevice != null && preferredDevice.id != null) {
+                                if (preferredDevice != null) {
                                     guardValidSpotifyApi { it ->
                                         if (it.player.getCurrentlyPlaying()?.isPlaying ?: false) {
-                                            it.player.pause(preferredDevice.id)
+                                            it.player.pause(preferredDevice.value)
                                         }
 
                                         delay(500)
@@ -285,7 +283,7 @@ class PlaybackService : MediaLibraryService() {
                                         it.player.startPlayback(
                                             contextUri = contextUri,
                                             offsetPlayableUri = playableUri,
-                                            deviceId = preferredDevice.id
+                                            deviceId = preferredDevice.value
                                         )
                                     }
                                 }
