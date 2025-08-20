@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.twotone.AccountCircle
 import androidx.compose.material.icons.twotone.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -33,6 +34,7 @@ import de.techmaved.mediabrowserforspotify.activities.MainActivity
 import de.techmaved.mediabrowserforspotify.auth.SpotifyPkceLoginActivityImpl
 import de.techmaved.mediabrowserforspotify.auth.pkceClassBackTo
 import de.techmaved.mediabrowserforspotify.ui.Info
+import de.techmaved.mediabrowserforspotify.ui.Settings
 import de.techmaved.mediabrowserforspotify.utils.Store
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,6 +103,12 @@ fun AppBarWithContainer(
                                 expanded = dropdownMenuState.value,
                                 onDismissRequest = { dropdownMenuState.value = false }
                             ) {
+                                DropdownMenuItem(
+                                    leadingIcon = { Icon(Icons.Outlined.Settings, "Settings") },
+                                    text = { Text(text = "Settings") },
+                                    onClick = { navController.navigate(Settings) }
+                                )
+
                                 DropdownMenuItem(
                                     leadingIcon = { Icon(Icons.Outlined.Info, "About") },
                                     text = { Text(text = "About") },

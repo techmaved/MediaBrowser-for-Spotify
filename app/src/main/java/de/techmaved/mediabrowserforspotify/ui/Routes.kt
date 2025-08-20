@@ -7,3 +7,6 @@ object Main
 
 @Serializable
 object Info
+
+@Serializable
+object Settings

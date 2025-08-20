@@ -35,6 +35,7 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.ContextUri
+import com.adamratzman.spotify.models.DeviceType
 import com.adamratzman.spotify.models.PlayableUri
 import de.techmaved.mediabrowserforspotify.activities.MainActivity
 import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
@@ -45,7 +46,10 @@ import com.spotify.android.appremote.api.ConnectionParams
 import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
+import de.techmaved.mediabrowserforspotify.MyApplication
 import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
+import de.techmaved.mediabrowserforspotify.models.settings.PreferredDevice
+import de.techmaved.mediabrowserforspotify.models.settings.preferredDeviceKey
 import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
 import kotlinx.coroutines.*
 
@@ -170,7 +174,13 @@ class PlaybackService : MediaLibraryService() {
                 // https://github.com/androidx/media/issues/355
                 return Futures.immediateFuture(LibraryResult.ofError(RESULT_ERROR_NOT_SUPPORTED))
             }
-            return Futures.immediateFuture(LibraryResult.ofItem(MediaItemTree.getRootItem(), params))
+
+            val rootItem = MediaItemTree.getRootItem()
+                ?: return Futures.immediateFuture(
+                        LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+                    )
+
+            return Futures.immediateFuture(LibraryResult.ofItem(rootItem, params))
         }
 
         override fun onGetItem(
@@ -264,24 +274,30 @@ class PlaybackService : MediaLibraryService() {
                     val playableUri = PlayableUri.invoke(currentMediaItem?.localConfiguration?.uri.toString())
                     val contextUri = ContextUri.invoke(currentMediaItem?.localConfiguration?.tag.toString())
 
-                    audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_MUTE, AudioManager.FLAG_SHOW_UI)
-                    spotifyAppRemote?.playerApi?.play(currentMediaItem?.localConfiguration?.uri.toString())?.setResultCallback {
-                        CoroutineScope(Dispatchers.IO).launch {
-                            guardValidSpotifyApi { api: SpotifyClientApi ->
-                                try {
-                                    api.player.startPlayback(contextUri = contextUri, offsetPlayableUri = playableUri)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val store = Store(MyApplication.context)
+                            store.getSetting<PreferredDevice>(preferredDeviceKey).collect { preferredDevice ->
+                                delay(500)
 
-                                    delay(1000)
-                                    spotifyAppRemote?.playerApi?.playerState?.setResultCallback {
-                                        if (it.isPaused) {
-                                            spotifyAppRemote?.playerApi?.seekTo(0)
-                                            spotifyAppRemote?.playerApi?.resume()
+                                if (preferredDevice != null && preferredDevice.id != null) {
+                                    guardValidSpotifyApi { it ->
+                                        if (it.player.getCurrentlyPlaying()?.isPlaying ?: false) {
+                                            it.player.pause(preferredDevice.id)
                                         }
 
-                                        audioManager?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_UNMUTE , AudioManager.FLAG_SHOW_UI)
+                                        delay(500)
+
+                                        it.player.startPlayback(
+                                            contextUri = contextUri,
+                                            offsetPlayableUri = playableUri,
+                                            deviceId = preferredDevice.id
+                                        )
                                     }
-                                } catch (e: Throwable) {}
+                                }
                             }
+                        } catch (e: Exception) {
+                            println(e.printStackTrace())
                         }
                     }
                 }
