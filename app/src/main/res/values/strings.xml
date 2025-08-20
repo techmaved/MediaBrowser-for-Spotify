@@ -9,4 +9,9 @@
     <string name="open_spotify">OPEN SPOTIFY</string>
     <string name="github_issues_link">https://github.com/techmaved/MediaBrowser-for-Spotify/issues</string>
     <string name="github_repository">https://github.com/techmaved/MediaBrowser-for-Spotify</string>
+    <string name="settings">Settings</string>
+    <string name="preferred_device">preferred Device</string>
+    <string name="failed_to_fetch">Failed to fetch</string>
+    <string name="saved">Saved</string>
+    <string name="save">Save</string>
 </resources>

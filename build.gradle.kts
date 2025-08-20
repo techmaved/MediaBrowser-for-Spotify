@@ -6,4 +6,5 @@ plugins {
     alias(libs.plugins.app.versioning) apply false
     alias(libs.plugins.aboutlibraries.plugin) apply false
     alias(libs.plugins.serialization.plugin)
+    alias(libs.plugins.compose.compiler) apply false
 }

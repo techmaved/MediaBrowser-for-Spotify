@@ -25,6 +25,7 @@ import de.techmaved.mediabrowserforspotify.ui.components.*
 import de.techmaved.mediabrowserforspotify.ui.theme.MediaBrowserForSpotifyTheme
 import de.techmaved.mediabrowserforspotify.ui.Info
 import de.techmaved.mediabrowserforspotify.ui.Main
+import de.techmaved.mediabrowserforspotify.ui.Settings
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +54,10 @@ class MainActivity : ComponentActivity() {
 
                         composable<Info> {
                             Info()
+                        }
+
+                        composable<Settings> {
+                            Settings()
                         }
                     }
                 }
