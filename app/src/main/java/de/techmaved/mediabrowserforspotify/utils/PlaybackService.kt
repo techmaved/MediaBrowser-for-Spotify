@@ -172,7 +172,13 @@ class PlaybackService : MediaLibraryService() {
                 // https://github.com/androidx/media/issues/355
                 return Futures.immediateFuture(LibraryResult.ofError(RESULT_ERROR_NOT_SUPPORTED))
             }
-            return Futures.immediateFuture(LibraryResult.ofItem(MediaItemTree.getRootItem(), params))
+
+            val rootItem = MediaItemTree.getRootItem()
+                ?: return Futures.immediateFuture(
+                        LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+                    )
+
+            return Futures.immediateFuture(LibraryResult.ofItem(rootItem, params))
         }
 
         override fun onGetItem(

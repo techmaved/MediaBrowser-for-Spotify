@@ -338,8 +338,8 @@ object MediaItemTree {
         return treeNodes[id]?.item
     }
 
-    fun getRootItem(): MediaItem {
-        return treeNodes[ROOT_ID]!!.item
+    fun getRootItem(): MediaItem? {
+        return treeNodes[ROOT_ID]?.item
     }
 
     fun getChildren(id: String): List<MediaItem>? {
