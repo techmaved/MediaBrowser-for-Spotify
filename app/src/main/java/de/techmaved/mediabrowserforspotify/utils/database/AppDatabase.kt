@@ -1,6 +1,7 @@
 package de.techmaved.mediabrowserforspotify.utils.database
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -10,7 +11,13 @@ import de.techmaved.mediabrowserforspotify.dao.MediaDao
 import de.techmaved.mediabrowserforspotify.entities.Browsable
 import de.techmaved.mediabrowserforspotify.entities.MediaItem
 
-@Database(entities = [MediaItem::class, Browsable::class], version = 1)
+@Database(
+    entities = [MediaItem::class, Browsable::class],
+    version = 2,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2)
+    ]
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun mediaDao(): MediaDao

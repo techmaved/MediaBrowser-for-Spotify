@@ -2,6 +2,7 @@ package de.techmaved.mediabrowserforspotify.entities
 
 import android.net.Uri
 import androidx.room.*
+import java.util.Date
 
 @Entity(tableName = "mediaItem")
 data class MediaItem(
@@ -10,6 +11,9 @@ data class MediaItem(
     @ColumnInfo(name = "browsableUri") val browsableUri: Uri,
     @ColumnInfo(name = "name") val title: String,
     @ColumnInfo(name = "artist") val artist: String,
+    @ColumnInfo(name = "album") val album: String? = null,
+    @ColumnInfo(name = "date_added") val dateAdded: Date? = null,
+    @ColumnInfo(name = "duration", defaultValue = "0") val duration: Int
 )
 
 @Entity(tableName = "browsable")
