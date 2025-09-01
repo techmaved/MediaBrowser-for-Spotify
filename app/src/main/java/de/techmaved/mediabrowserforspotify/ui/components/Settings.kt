@@ -3,6 +3,7 @@ package de.techmaved.mediabrowserforspotify.ui.components
 import android.content.Context
 import android.os.Build
 import android.widget.Toast
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +11,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,7 +22,10 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -31,16 +38,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.adamratzman.spotify.models.Device
+import com.mikepenz.iconics.compose.Image
+import com.mikepenz.iconics.typeface.library.fontawesome.FontAwesome
 import de.techmaved.mediabrowserforspotify.R
 import de.techmaved.mediabrowserforspotify.models.settings.DefaultSetting
+import de.techmaved.mediabrowserforspotify.models.settings.OrderOption
 import de.techmaved.mediabrowserforspotify.models.settings.PreferredDevice
 import de.techmaved.mediabrowserforspotify.models.settings.Setting
 import de.techmaved.mediabrowserforspotify.models.settings.SortOption
+import de.techmaved.mediabrowserforspotify.models.settings.orderBy
 import de.techmaved.mediabrowserforspotify.models.settings.preferredDeviceKey
 import de.techmaved.mediabrowserforspotify.models.settings.sortByKey
 import de.techmaved.mediabrowserforspotify.ui.theme.Typography
@@ -62,6 +74,7 @@ fun Settings() {
     val (preferredDevice, setPreferredDevice) = remember { mutableStateOf<Setting?>(null) }
 
     val (sorting, setSorting) = remember { mutableStateOf<Setting?>(null) }
+    val (order, setOrder) = remember { mutableStateOf(OrderOption("asc", "")) }
 
     Surface(
         modifier = Modifier
@@ -99,6 +112,8 @@ fun Settings() {
                     SortOptionSetting(
                         sorting,
                         setSorting,
+                        order,
+                        setOrder,
                         store
                     )
                 }
@@ -127,10 +142,15 @@ fun Settings() {
                                         return@launch
                                     }
 
-                                    println("Saving")
                                     store.saveSetting(
                                         SortOption(selected.value, selected.label),
                                         sortByKey
+                                    )
+                                }
+                                launch {
+                                    store.saveSetting(
+                                        order,
+                                        orderBy
                                     )
                                 }
                             }
@@ -174,25 +194,37 @@ fun PreferredDeviceSetting(
         devices?.map { PreferredDevice(it.id!!, it.name) },
         preferredDevice,
         setPreferredDevice
-    )
+    ) {
+
+    }
 }
 
 @Composable
 fun SortOptionSetting(
     sorting: Setting?,
     setSorting: (Setting?) -> Unit,
+    order: OrderOption,
+    setOrder: (OrderOption) -> Unit,
     store: Store
 ) {
     val scope = rememberCoroutineScope()
-    val sortOptions = listOf<Setting>(SortOption("1", "Label 1"), SortOption("2", "Label 2"))
+    val sortOptions = listOf<Setting>(
+        SortOption("title", stringResource(R.string.title)),
+        SortOption("artist", stringResource(R.string.artist)),
+        SortOption("album", stringResource(R.string.album)),
+        SortOption("recently_added", stringResource(R.string.recently_added)),
+        SortOption("duration", stringResource(R.string.duration))
+    )
 
     LaunchedEffect(Unit) {
         scope.launch {
             withContext(Dispatchers.IO) {
                 store.getSetting<SortOption>(sortByKey).take(1).collect { sortOption ->
-                    println("Got")
-                    println(sortOption)
                     setSorting(sortOption)
+                }
+
+                store.getSetting<OrderOption>(orderBy).take(1).collect { sortOption ->
+                    setOrder(sortOption ?: OrderOption("asc", ""))
                 }
             }
         }
@@ -203,7 +235,35 @@ fun SortOptionSetting(
         sortOptions,
         sorting,
         setSorting
-    )
+    ) {
+        val (icon, setIcon) = remember { mutableStateOf<FontAwesome.Icon?>(null) }
+
+        if (order.value == "asc") {
+            setIcon(FontAwesome.Icon.faw_arrow_up)
+        } else {
+            setIcon(FontAwesome.Icon.faw_arrow_down)
+        }
+
+        IconButton(
+            onClick = {
+                if (order.value == "asc") {
+                    setIcon(FontAwesome.Icon.faw_arrow_down)
+                    setOrder(OrderOption("desc", ""))
+                } else {
+                    setIcon(FontAwesome.Icon.faw_arrow_up)
+                    setOrder(OrderOption("asc", ""))
+                }
+
+            }
+        ) {
+            if (icon != null) {
+                Image(
+                    asset = icon,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -211,7 +271,8 @@ fun SortOptionSetting(
 fun Dropdown(
     _options: List<Setting>?,
     selectedOption: Setting?,
-    setSelectedOption: (Setting?) -> Unit
+    setSelectedOption: (Setting?) -> Unit,
+    actionContent: @Composable() () -> Unit?
 ) {
     var options: List<Setting>? = _options
 
@@ -243,12 +304,13 @@ fun Dropdown(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             TextField(
                 modifier = Modifier
                     .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryEditable)
-                    .fillMaxWidth(),
+                    .weight(1f),
                 value = selectedItem.value.label,
                 onValueChange = { },
                 readOnly = true,
@@ -256,6 +318,8 @@ fun Dropdown(
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                 }
             )
+
+            actionContent()
         }
 
         ExposedDropdownMenu(
@@ -292,7 +356,8 @@ fun Setting(
     settingKey: String,
     options: List<Setting>?,
     setting: Setting?,
-    setSetting: (Setting?) -> Unit
+    setSetting: (Setting?) -> Unit,
+    content: @Composable() () -> Unit?
 ) {
     Column(
         modifier = Modifier
@@ -301,7 +366,9 @@ fun Setting(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(settingKey)
-        Dropdown(options, setting, setSetting)
+        Dropdown(options, setting, setSetting) {
+            content()
+        }
     }
 }
 
