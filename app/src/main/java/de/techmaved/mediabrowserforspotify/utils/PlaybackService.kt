@@ -35,8 +35,6 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
 import com.adamratzman.spotify.models.ContextUri
 import com.adamratzman.spotify.models.PlayableUri
-import de.techmaved.mediabrowserforspotify.activities.MainActivity
-import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -45,11 +43,16 @@ import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
 import de.techmaved.mediabrowserforspotify.MyApplication
+import de.techmaved.mediabrowserforspotify.activities.MainActivity
+import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
 import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
 import de.techmaved.mediabrowserforspotify.models.settings.PreferredDevice
 import de.techmaved.mediabrowserforspotify.models.settings.preferredDeviceKey
 import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()

@@ -3,8 +3,8 @@ package de.techmaved.mediabrowserforspotify
 import android.app.Application
 import android.content.Context
 import androidx.appcompat.app.AppCompatDelegate
-import de.techmaved.mediabrowserforspotify.ui.components.ErrorDialog
 import de.techmaved.mediabrowserforspotify.models.Model
+import de.techmaved.mediabrowserforspotify.ui.components.ErrorDialog
 import org.acra.config.dialog
 import org.acra.data.StringFormat
 import org.acra.ktx.initAcra

@@ -1,7 +1,11 @@
 package de.techmaved.mediabrowserforspotify.entities
 
 import android.net.Uri
-import androidx.room.*
+import androidx.room.ColumnInfo
+import androidx.room.Embedded
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.Relation
 import java.util.Date
 
 @Entity(tableName = "mediaItem")

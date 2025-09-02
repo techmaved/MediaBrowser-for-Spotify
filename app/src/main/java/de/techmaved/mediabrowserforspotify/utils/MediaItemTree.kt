@@ -39,10 +39,13 @@ import de.techmaved.mediabrowserforspotify.models.settings.SortOption
 import de.techmaved.mediabrowserforspotify.models.settings.orderBy
 import de.techmaved.mediabrowserforspotify.models.settings.sortByKey
 import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import java.util.Date
 
 /**
