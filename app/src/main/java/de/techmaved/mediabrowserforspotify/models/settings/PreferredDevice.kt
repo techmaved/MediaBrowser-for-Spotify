@@ -8,8 +8,8 @@ const val preferredDeviceKey = "preferredDevice"
 @Serializable
 data class PreferredDevice(
     @SerializedName("id")
-    val id: String?,
+    override val value: String,
 
     @SerializedName("name")
-    val name: String
-)
+    override val label: String,
+): Setting()

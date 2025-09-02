@@ -33,12 +33,8 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionResult
-import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.models.ContextUri
-import com.adamratzman.spotify.models.DeviceType
 import com.adamratzman.spotify.models.PlayableUri
-import de.techmaved.mediabrowserforspotify.activities.MainActivity
-import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
@@ -47,11 +43,16 @@ import com.spotify.android.appremote.api.Connector
 import com.spotify.android.appremote.api.SpotifyAppRemote
 import de.techmaved.mediabrowserforspotify.BuildConfig
 import de.techmaved.mediabrowserforspotify.MyApplication
+import de.techmaved.mediabrowserforspotify.activities.MainActivity
+import de.techmaved.mediabrowserforspotify.activities.PlayerActivity
 import de.techmaved.mediabrowserforspotify.auth.guardValidSpotifyApi
 import de.techmaved.mediabrowserforspotify.models.settings.PreferredDevice
 import de.techmaved.mediabrowserforspotify.models.settings.preferredDeviceKey
 import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
@@ -280,10 +281,10 @@ class PlaybackService : MediaLibraryService() {
                             store.getSetting<PreferredDevice>(preferredDeviceKey).collect { preferredDevice ->
                                 delay(500)
 
-                                if (preferredDevice != null && preferredDevice.id != null) {
+                                if (preferredDevice != null) {
                                     guardValidSpotifyApi { it ->
                                         if (it.player.getCurrentlyPlaying()?.isPlaying ?: false) {
-                                            it.player.pause(preferredDevice.id)
+                                            it.player.pause(preferredDevice.value)
                                         }
 
                                         delay(500)
@@ -291,7 +292,7 @@ class PlaybackService : MediaLibraryService() {
                                         it.player.startPlayback(
                                             contextUri = contextUri,
                                             offsetPlayableUri = playableUri,
-                                            deviceId = preferredDevice.id
+                                            deviceId = preferredDevice.value
                                         )
                                     }
                                 }
