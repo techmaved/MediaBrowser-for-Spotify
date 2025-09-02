@@ -7,7 +7,7 @@ import java.util.Date
 import java.util.Locale
 
 fun getDate(date: String?): Date? {
-    val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val formatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
 
     try {
         if (date != null) {
@@ -25,7 +25,7 @@ fun releaseDateToDate(date: ReleaseDate?): Date? {
         return null
     }
 
-    val dateString = "${date.year}-${date.month}-${date.day}"
+    val dateString = "${date.year}-${date.month}-${date.day}T00:00:00Z"
 
     return getDate(dateString)
 }
