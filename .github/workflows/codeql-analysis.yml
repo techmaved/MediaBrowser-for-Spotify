@@ -32,7 +32,7 @@ jobs:
           ./gradlew --no-daemon clean
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: 'kotlin'
 
@@ -43,7 +43,7 @@ jobs:
           echo $ENCODED_STRING | base64 --decode > app/keystore.jks
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
         env:
           SIGNING_KEY_STORE_PATH: app/keystore.jks
           SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
@@ -51,4 +51,4 @@ jobs:
           SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
