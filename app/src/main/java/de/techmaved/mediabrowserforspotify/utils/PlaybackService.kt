@@ -57,7 +57,7 @@ import kotlinx.coroutines.launch
 class PlaybackService : MediaLibraryService() {
     private val librarySessionCallback = CustomMediaLibrarySessionCallback()
     private val clientId = BuildConfig.SPOTIFY_CLIENT_ID
-    private val redirectUri = "http://localhost:8888/callback"
+    private val redirectUri = "http://127.0.0.1:8888/callback"
     private var spotifyAppRemote: SpotifyAppRemote? = null
     private var audioManager: AudioManager? = null
 

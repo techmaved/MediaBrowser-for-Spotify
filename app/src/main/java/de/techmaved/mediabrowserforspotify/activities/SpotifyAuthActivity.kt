@@ -12,7 +12,7 @@ import de.techmaved.mediabrowserforspotify.BuildConfig
 
 class SpotifyAuthActivity : ComponentActivity() {
     private val clientId = BuildConfig.SPOTIFY_CLIENT_ID
-    private val redirectUri = "http://localhost:8888/callback"
+    private val redirectUri = "http://127.0.0.1:8888/callback"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,7 +20,7 @@ class SpotifyAuthActivity : ComponentActivity() {
         moveTaskToBack(true)
 
         val builder =
-            AuthorizationRequest.Builder(clientId, AuthorizationResponse.Type.TOKEN, redirectUri)
+            AuthorizationRequest.Builder(clientId, AuthorizationResponse.Type.CODE, redirectUri)
 
         builder.setScopes(
             arrayOf(
@@ -39,7 +39,7 @@ class SpotifyAuthActivity : ComponentActivity() {
         if (requestCode == REQUEST_CODE) {
             val response = AuthorizationClient.getResponse(resultCode, intent)
             when (response.type) {
-                AuthorizationResponse.Type.TOKEN -> {
+                AuthorizationResponse.Type.CODE -> {
                     val intent = Intent(this, MainActivity::class.java)
                     startActivity(intent)
                 }
