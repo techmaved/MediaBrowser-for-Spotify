@@ -2,9 +2,9 @@ package de.techmaved.mediabrowserforspotify.auth
 
 import android.app.Activity
 import android.content.Intent
-import com.adamratzman.spotify.auth.pkce.AbstractSpotifyPkceLoginActivity
 import com.adamratzman.spotify.SpotifyClientApi
 import com.adamratzman.spotify.SpotifyScope
+import com.adamratzman.spotify.auth.pkce.AbstractSpotifyPkceLoginActivity
 import de.techmaved.mediabrowserforspotify.BuildConfig
 import de.techmaved.mediabrowserforspotify.MyApplication
 import de.techmaved.mediabrowserforspotify.activities.MainActivity

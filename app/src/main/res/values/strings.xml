@@ -14,4 +14,11 @@
     <string name="failed_to_fetch">Failed to fetch</string>
     <string name="saved">Saved</string>
     <string name="save">Save</string>
+    <string name="sort_by">Sort by</string>
+    <string name="no_selection">No selection</string>
+    <string name="title">Title</string>
+    <string name="artist">Artist</string>
+    <string name="album">Album</string>
+    <string name="recently_added">Recently added</string>
+    <string name="duration">Duration</string>
 </resources>

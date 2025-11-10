@@ -1,11 +1,11 @@
 package de.techmaved.mediabrowserforspotify.models.settings
 
-import kotlinx.serialization.Serializable
+abstract class Setting {
+    abstract val value: String
+    abstract val label: String
+}
 
-const val preferredDeviceKey = "preferredDevice"
-
-@Serializable
-data class PreferredDevice(
+data class DefaultSetting(
     override val value: String,
     override val label: String,
 ): Setting()

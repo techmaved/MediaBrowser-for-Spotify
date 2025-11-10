@@ -21,11 +21,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import de.techmaved.mediabrowserforspotify.models.Model
-import de.techmaved.mediabrowserforspotify.ui.components.*
-import de.techmaved.mediabrowserforspotify.ui.theme.MediaBrowserForSpotifyTheme
 import de.techmaved.mediabrowserforspotify.ui.Info
 import de.techmaved.mediabrowserforspotify.ui.Main
 import de.techmaved.mediabrowserforspotify.ui.Settings
+import de.techmaved.mediabrowserforspotify.ui.components.AppBarWithContainer
+import de.techmaved.mediabrowserforspotify.ui.components.Info
+import de.techmaved.mediabrowserforspotify.ui.components.MediaItemsDatabaseCounter
+import de.techmaved.mediabrowserforspotify.ui.components.MirrorSection
+import de.techmaved.mediabrowserforspotify.ui.components.Settings
+import de.techmaved.mediabrowserforspotify.ui.components.SpotifyDesign
+import de.techmaved.mediabrowserforspotify.ui.components.TextWithButtons
+import de.techmaved.mediabrowserforspotify.ui.theme.MediaBrowserForSpotifyTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -34,10 +34,19 @@ import de.techmaved.mediabrowserforspotify.models.MediaItemType.LIKED_SONG_ID
 import de.techmaved.mediabrowserforspotify.models.MediaItemType.PLAYLIST_ID
 import de.techmaved.mediabrowserforspotify.models.MediaItemType.ROOT_ID
 import de.techmaved.mediabrowserforspotify.models.MediaItemType.SHOW_ID
+import de.techmaved.mediabrowserforspotify.models.settings.OrderOption
+import de.techmaved.mediabrowserforspotify.models.settings.SortOption
+import de.techmaved.mediabrowserforspotify.models.settings.orderBy
+import de.techmaved.mediabrowserforspotify.models.settings.sortByKey
 import de.techmaved.mediabrowserforspotify.utils.database.AppDatabase
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import java.util.Date
 
 /**
  * A sample media catalog that represents media items as a tree.
@@ -188,7 +197,9 @@ object MediaItemTree {
                     treeNodes[browsableWithMediaItems.browsable.type]!!.addChild(browsableWithMediaItems.browsable.uri.toString())
                 }
 
-                browsableWithMediaItems.mediaItems.forEach { mediaItem: de.techmaved.mediabrowserforspotify.entities.MediaItem ->
+                val mediaItems = getSortedMediaItems(browsableWithMediaItems.mediaItems)
+
+                mediaItems.forEach { mediaItem: de.techmaved.mediabrowserforspotify.entities.MediaItem ->
                     treeNodes[mediaItem.uri.toString()] =
                         MediaItemNode(
                             buildMediaItem(
@@ -215,6 +226,97 @@ object MediaItemTree {
             }
     }
 
+    private fun getSortedMediaItems(mediaItems: List<de.techmaved.mediabrowserforspotify.entities.MediaItem>): List<de.techmaved.mediabrowserforspotify.entities.MediaItem> {
+        val store = Store(MyApplication.context)
+        val sortByFlow = store.getSetting<SortOption>(sortByKey).take(1)
+        val orderFlow = store.getSetting<OrderOption>(orderBy).take(1)
+        var items = listOf<de.techmaved.mediabrowserforspotify.entities.MediaItem>()
+        var order = ""
+
+        runBlocking {
+            orderFlow.collect {
+                order = it?.value ?: ""
+            }
+
+            sortByFlow.collect { sortBySetting ->
+                if (sortBySetting?.value == "title") {
+                    if (order == "asc") {
+                        items = mediaItems.sortedBy {
+                            it.title
+                        }
+                    } else {
+                        items = mediaItems.sortedByDescending {
+                            it.title
+                        }
+                    }
+
+                    return@collect
+                }
+
+                if (sortBySetting?.value == "artist") {
+                    if (order == "asc") {
+                        items = mediaItems.sortedBy {
+                            it.artist
+                        }
+                    } else {
+                        items = mediaItems.sortedByDescending {
+                            it.artist
+                        }
+                    }
+
+                    return@collect
+                }
+
+                if (sortBySetting?.value == "album") {
+                    if (order == "asc") {
+                        items = mediaItems.sortedBy {
+                            it.album
+                        }
+                    } else {
+                        items = mediaItems.sortedByDescending {
+                            it.album
+                        }
+                    }
+
+                    return@collect
+                }
+
+                if (sortBySetting?.value == "recently_added") {
+                    if (order == "asc") {
+                        items = mediaItems.sortedBy {
+                            it.dateAdded
+                        }
+                    } else {
+                        items = mediaItems.sortedByDescending {
+                            it.dateAdded
+                        }
+                    }
+
+                    return@collect
+                }
+
+                if (sortBySetting?.value == "duration") {
+                    if (order == "asc") {
+                        items = mediaItems.sortedBy {
+                            it.duration
+                        }
+                    } else {
+                        items = mediaItems.sortedByDescending {
+                            it.duration
+                        }
+                    }
+
+                    return@collect
+                }
+
+
+                items = mediaItems
+            }
+        }
+
+        return items
+    }
+
     private fun insertBrowsable(uri: String, name: String, type: String) {
         CoroutineScope(Dispatchers.IO).launch {
             database.browsableDao().inset(
@@ -227,14 +329,25 @@ object MediaItemTree {
         }
     }
 
-    private fun insertMediaItem(uri: String, browsableUri: String, title: String, artists: String) {
+    private fun insertMediaItem(
+        uri: String,
+        browsableUri: String,
+        title: String,
+        artists: String,
+        album: String?,
+        dateAdded: Date?,
+        duration: Int
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             database.mediaDao().inset(
                 de.techmaved.mediabrowserforspotify.entities.MediaItem(
                     uri = Uri.parse(uri),
                     browsableUri = Uri.parse(browsableUri),
                     title = title,
-                    artist = artists
+                    artist = artists,
+                    album = album,
+                    dateAdded = dateAdded,
+                    duration = duration
                 )
             )
         }
@@ -257,7 +370,10 @@ object MediaItemTree {
                             uri = it.uri.uri,
                             browsableUri = simplePlaylist.uri.uri,
                             title = it.name,
-                            artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
+                            artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" },
+                            album = it.album.name,
+                            dateAdded = getDate(playlistTrack.addedAt),
+                            duration = it.durationMs
                         )
                         send(Unit)
                     }
@@ -278,7 +394,10 @@ object MediaItemTree {
                         uri = it.uri.uri,
                         browsableUri = simplePlaylist.uri.uri,
                         title = it.name,
-                        artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
+                        artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" },
+                        album = it.album.name,
+                        dateAdded = getDate(playlistTrack.addedAt),
+                        duration = it.durationMs
                     )
                     send(Unit)
                 }
@@ -302,7 +421,10 @@ object MediaItemTree {
                                 uri = it.uri.uri,
                                 browsableUri = savedAlbum.album.uri.uri,
                                 title = it.name,
-                                artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
+                                artists = it.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" },
+                                album = it.album.name,
+                                dateAdded = null,
+                                duration = it.durationMs
                             )
 
                             send(Unit)
@@ -326,7 +448,10 @@ object MediaItemTree {
                     uri = simpleEpisode.uri.uri,
                     browsableUri = savedShow.show.uri.uri,
                     title = simpleEpisode.name,
-                    artists = savedShow.show.name
+                    artists = savedShow.show.name,
+                    album = null,
+                    dateAdded = releaseDateToDate(simpleEpisode.releaseDate),
+                    duration = simpleEpisode.durationMs
                 )
 
                 send(Unit)

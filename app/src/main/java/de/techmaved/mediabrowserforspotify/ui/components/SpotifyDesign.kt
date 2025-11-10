@@ -4,25 +4,25 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.ButtonDefaults
-import de.techmaved.mediabrowserforspotify.ui.theme.SpotifyGreen
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import de.techmaved.mediabrowserforspotify.R
 import de.techmaved.mediabrowserforspotify.activities.MainActivity
+import de.techmaved.mediabrowserforspotify.ui.theme.SpotifyGreen
 
 class SpotifyDesign {
     val spotifyPackage = "com.spotify.music"

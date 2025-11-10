@@ -110,7 +110,10 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
                         uri = Uri.parse(track.uri.uri),
                         browsableUri = browsable.uri,
                         title = track.name,
-                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
+                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" },
+                        album = track.album.name,
+                        dateAdded = getDate(likedSongTrack.addedAt),
+                        duration = track.durationMs
                     ))
                 }
             }
@@ -118,12 +121,21 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
         ChipType.ALBUMS -> {
             val albumTracks = spotifyWebApiService.getAlbumTracks(id)
             albumTracks.forEach { albumTrack ->
-                    list.add(MediaItem(
-                        uri = Uri.parse(albumTrack.uri.uri),
-                        browsableUri = browsable.uri,
-                        title = albumTrack.name,
-                        artist = albumTrack.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
-                    ))
+                albumTrack.toFullTrack().let {
+                    list.add(
+                        MediaItem(
+                            uri = Uri.parse(albumTrack.uri.uri),
+                            browsableUri = browsable.uri,
+                            title = albumTrack.name,
+                            artist = albumTrack.artists.joinToString(", ") { artistSimple ->
+                                artistSimple.name ?: ""
+                            },
+                            album = it?.album?.name,
+                            dateAdded = null,
+                            duration = albumTrack.durationMs
+                        )
+                    )
+                }
             }
         }
         ChipType.PLAYLISTS-> {
@@ -134,7 +146,10 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
                         uri = Uri.parse(track.uri.uri),
                         browsableUri = browsable.uri,
                         title = track.name,
-                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" }
+                        artist = track.artists.joinToString(", ") { artistSimple -> artistSimple.name ?: "" },
+                        album = track.album.name,
+                        dateAdded = getDate(playlistTrack.addedAt),
+                        duration = track.durationMs
                     ))
                 }
             }
@@ -146,7 +161,10 @@ suspend fun getMediaItems(id: String, category: String, browsable: Browsable): L
                     uri = Uri.parse(showEpisode.uri.uri),
                     browsableUri = browsable.uri,
                     title = showEpisode.name,
-                    artist = browsable.name
+                    artist = browsable.name,
+                    album = null,
+                    dateAdded = releaseDateToDate(showEpisode.releaseDate),
+                    duration = showEpisode.durationMs
                 ))
 
             }
